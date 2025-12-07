@@ -1,12 +1,18 @@
-import { Component } from '@angular/core';
-import { IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/angular/standalone';
-
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonText, IonButton } from '@ionic/angular/standalone';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent],
+  standalone: true,
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonText, IonButton],
 })
 export class HomePage {
-  constructor() {}
+  constructor(private router: Router) { }
+
+  async patientRecords() {
+    this.router.navigate(['/addpatient']);
+  }
 }
