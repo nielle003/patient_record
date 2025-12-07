@@ -1,0 +1,72 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button *ngIf="!selectedPatient" defaultHref="/home"></ion-back-button>
+      <ion-button *ngIf="selectedPatient" (click)="backToList()">
+        <ion-label>Back</ion-label>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ selectedPatient ? 'Patient Details' : 'View Patients' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Patient List View -->
+  <div *ngIf="!selectedPatient">
+    <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="handleSearch($event)"
+      placeholder="Search by name or HMO number">
+    </ion-searchbar>
+
+    <ion-list *ngIf="filteredPatients.length > 0">
+      <ion-item *ngFor="let patient of filteredPatients" (click)="selectPatient(patient)" button>
+        <ion-label>
+          <h2>{{ patient.firstName }} {{ patient.lastName }}</h2>
+          <p>{{ patient.gender }} • Age {{ getAge(patient.birthday) }}</p>
+          <p *ngIf="patient.hmoNumber">HMO: {{ patient.hmo }} - {{ patient.hmoNumber }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <ion-text *ngIf="filteredPatients.length === 0" class="ion-text-center">
+      <p>No patients found</p>
+    </ion-text>
+  </div>
+
+  <!-- Patient Details and Visits View -->
+  <div *ngIf="selectedPatient">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p><strong>Gender:</strong> {{ selectedPatient.gender }}</p>
+        <p><strong>Birthday:</strong> {{ selectedPatient.birthday }} (Age {{ getAge(selectedPatient.birthday) }})</p>
+        <p *ngIf="selectedPatient.occupation"><strong>Occupation:</strong> {{ selectedPatient.occupation }}</p>
+        <p *ngIf="selectedPatient.company"><strong>Company:</strong> {{ selectedPatient.company }}</p>
+        <p *ngIf="selectedPatient.hmo"><strong>HMO:</strong> {{ selectedPatient.hmo }}</p>
+        <p *ngIf="selectedPatient.hmoNumber"><strong>HMO Number:</strong> {{ selectedPatient.hmoNumber }}</p>
+        <p *ngIf="selectedPatient.validId"><strong>Valid ID:</strong> {{ selectedPatient.validId }}</p>
+        <p *ngIf="selectedPatient.idNumber"><strong>ID Number:</strong> {{ selectedPatient.idNumber }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <h2>Visit History</h2>
+
+    <ion-card *ngFor="let visit of visits">
+      <ion-card-header>
+        <ion-card-title>{{ visit.dateOfVisit | date:'medium' }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p><strong>Procedure:</strong> {{ visit.procedureDone }}</p>
+        <p *ngIf="visit.comments"><strong>Comments:</strong> {{ visit.comments }}</p>
+        <p><strong>Payment Mode:</strong> {{ visit.modeOfPayment }}</p>
+        <p><strong>Payment:</strong> ₱{{ visit.payment | number:'1.2-2' }}</p>
+        <p><strong>Balance:</strong> ₱{{ visit.balance | number:'1.2-2' }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-text *ngIf="visits.length === 0" class="ion-text-center">
+      <p>No visit records found for this patient</p>
+    </ion-text>
+  </div>
+</ion-content>

@@ -35,27 +35,35 @@ export class PatientService {
         await this.init()
         const ts = Date.now()
         console.log('Adding patient:', patient)
-        const res: any = await this.db.run(
-            `INSERT INTO patients (
+        try {
+            const res: any = await this.db.run(
+                `INSERT INTO patients (
         firstName, lastName, gender, birthday, occupation, 
         company, hmo, hmoNumber, validId, idNumber, createdAt
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-                patient.firstName,
-                patient.lastName,
-                patient.gender,
-                patient.birthday,
-                patient.occupation,
-                patient.company,
-                patient.hmo,
-                patient.hmoNumber,
-                patient.validId,
-                patient.idNumber,
-                ts
-            ]
-        )
-        console.log('Add patient result:', res)
-        return res.changes?.lastId ?? -1
+                [
+                    patient.firstName,
+                    patient.lastName,
+                    patient.gender,
+                    patient.birthday,
+                    patient.occupation || '',
+                    patient.company || '',
+                    patient.hmo || '',
+                    patient.hmoNumber || '',
+                    patient.validId || '',
+                    patient.idNumber || '',
+                    ts
+                ]
+            )
+            console.log('Add patient result:', res)
+            // Check different possible response formats
+            const lastId = res?.changes?.lastId || res?.lastId || -1
+            console.log('Last inserted ID:', lastId)
+            return lastId
+        } catch (error) {
+            console.error('Error in addPatient:', error)
+            throw error
+        }
     }
 
     async getAllPatients(): Promise<Patient[]> {

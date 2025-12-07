@@ -15,4 +15,11 @@ export class HomePage {
   async patientRecords() {
     this.router.navigate(['/addpatient']);
   }
+  async viewPatients() {
+    this.router.navigate(['/viewpatient']);
+  }
+
+  async addVisit() {
+    this.router.navigate(['/addvisit']);
+  }
 }

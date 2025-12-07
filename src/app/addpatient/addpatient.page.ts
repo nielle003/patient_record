@@ -79,20 +79,26 @@ export class AddpatientPage implements OnInit {
     }
 
     try {
+      console.log('Attempting to add patient:', this.patient)
       const patientId = await this.patientService.addPatient(this.patient)
-      if (patientId > 0) {
+      console.log('Patient added with ID:', patientId)
+
+      if (patientId && patientId > 0) {
         this.success = 'Patient added successfully!'
-        await alert(this.success)
+        alert(this.success)
+        this.resetForm()
         setTimeout(() => {
           this.router.navigate(['/home'])
-        }, 1500)
+        }, 1000)
       } else {
-        this.error = 'Failed to add patient'
-        await alert(this.error)
+        this.error = 'Failed to add patient - no ID returned'
+        console.error(this.error)
+        alert(this.error)
       }
     } catch (err) {
       console.error('Error adding patient:', err)
-      this.error = 'An error occurred while adding patient'
+      this.error = 'An error occurred while adding patient: ' + (err as Error).message
+      alert(this.error)
     }
   }
 

@@ -1,0 +1,106 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/viewpatient"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Add Visit</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form>
+    <!-- Patient Search -->
+    <ion-item>
+      <ion-label position="stacked">Patient *</ion-label>
+      <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="handleSearch($event)" name="patientSearch"
+        placeholder="Search patient by name or HMO">
+      </ion-searchbar>
+    </ion-item>
+
+    <!-- Selected Patient Display -->
+    <ion-item *ngIf="selectedPatient" lines="none">
+      <ion-label>
+        <h3>{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</h3>
+        <p>{{ selectedPatient.gender }} • Age {{ selectedPatient.birthday }}</p>
+      </ion-label>
+      <ion-button fill="clear" slot="end" (click)="clearPatientSelection()">
+        Clear
+      </ion-button>
+    </ion-item>
+
+    <!-- Patient Search Results -->
+    <ion-list *ngIf="filteredPatients.length > 0 && !selectedPatient && searchTerm">
+      <ion-item *ngFor="let patient of filteredPatients" (click)="selectPatient(patient)" button>
+        <ion-label>
+          <h3>{{ patient.firstName }} {{ patient.lastName }}</h3>
+          <p>{{ patient.gender }} • {{ patient.birthday }}</p>
+          <p *ngIf="patient.hmoNumber">HMO: {{ patient.hmo }} - {{ patient.hmoNumber }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <!-- Procedure -->
+    <ion-item>
+      <ion-label position="stacked">Procedure *</ion-label>
+      <ion-select [(ngModel)]="visit.procedureDone" name="procedureDone" placeholder="Select procedure">
+        <ion-select-option *ngFor="let procedure of procedures" [value]="procedure">
+          {{ procedure }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Date of Visit -->
+    <ion-item>
+      <ion-label position="stacked">Date of Visit *</ion-label>
+      <ion-input type="datetime-local" [(ngModel)]="visit.dateOfVisit" name="dateOfVisit" required>
+      </ion-input>
+    </ion-item>
+
+    <!-- Mode of Payment -->
+    <ion-item>
+      <ion-label position="stacked">Mode of Payment *</ion-label>
+      <ion-select [(ngModel)]="visit.modeOfPayment" name="modeOfPayment" placeholder="Select payment mode">
+        <ion-select-option *ngFor="let mode of paymentModes" [value]="mode">
+          {{ mode }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Payment -->
+    <ion-item>
+      <ion-label position="stacked">Payment (₱)</ion-label>
+      <ion-input type="number" [(ngModel)]="visit.payment" name="payment" placeholder="0.00" min="0" step="0.01">
+      </ion-input>
+    </ion-item>
+
+    <!-- Balance -->
+    <ion-item>
+      <ion-label position="stacked">Balance (₱)</ion-label>
+      <ion-input type="number" [(ngModel)]="visit.balance" name="balance" placeholder="0.00" min="0" step="0.01">
+      </ion-input>
+    </ion-item>
+
+    <!-- Comments -->
+    <ion-item>
+      <ion-label position="stacked">Comments</ion-label>
+      <ion-textarea [(ngModel)]="visit.comments" name="comments" rows="4" placeholder="Additional notes...">
+      </ion-textarea>
+    </ion-item>
+
+    <!-- Error/Success Messages -->
+    <ion-text color="danger" *ngIf="error">
+      <p class="ion-padding">{{ error }}</p>
+    </ion-text>
+    <ion-text color="success" *ngIf="success">
+      <p class="ion-padding">{{ success }}</p>
+    </ion-text>
+
+    <!-- Buttons -->
+    <ion-button expand="block" (click)="addVisit()" class="ion-margin-top">
+      Add Visit
+    </ion-button>
+    <ion-button expand="block" fill="outline" (click)="resetForm()">
+      Reset Form
+    </ion-button>
+  </form>
+</ion-content>
