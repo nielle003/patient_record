@@ -1,0 +1,7 @@
+{
+  "name": "patient_record_system",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
