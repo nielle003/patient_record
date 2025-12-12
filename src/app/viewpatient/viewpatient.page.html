@@ -41,12 +41,21 @@
       <ion-card-content>
         <p><strong>Gender:</strong> {{ selectedPatient.gender }}</p>
         <p><strong>Birthday:</strong> {{ selectedPatient.birthday }} (Age {{ getAge(selectedPatient.birthday) }})</p>
+        <p *ngIf="selectedPatient.contactNumber"><strong>Contact Number:</strong> {{ selectedPatient.contactNumber }}
+        </p>
         <p *ngIf="selectedPatient.occupation"><strong>Occupation:</strong> {{ selectedPatient.occupation }}</p>
         <p *ngIf="selectedPatient.company"><strong>Company:</strong> {{ selectedPatient.company }}</p>
         <p *ngIf="selectedPatient.hmo"><strong>HMO:</strong> {{ selectedPatient.hmo }}</p>
         <p *ngIf="selectedPatient.hmoNumber"><strong>HMO Number:</strong> {{ selectedPatient.hmoNumber }}</p>
         <p *ngIf="selectedPatient.validId"><strong>Valid ID:</strong> {{ selectedPatient.validId }}</p>
         <p *ngIf="selectedPatient.idNumber"><strong>ID Number:</strong> {{ selectedPatient.idNumber }}</p>
+
+        <ion-button expand="block" (click)="editPatient(selectedPatient)" color="primary">
+          Edit Patient Information
+        </ion-button>
+        <ion-button expand="block" (click)="deletePatient(selectedPatient)" color="danger" fill="outline">
+          Delete Patient
+        </ion-button>
       </ion-card-content>
     </ion-card>
 
@@ -60,8 +69,27 @@
         <p><strong>Procedure:</strong> {{ visit.procedureDone }}</p>
         <p *ngIf="visit.comments"><strong>Comments:</strong> {{ visit.comments }}</p>
         <p><strong>Payment Mode:</strong> {{ visit.modeOfPayment }}</p>
-        <p><strong>Payment:</strong> ₱{{ visit.payment | number:'1.2-2' }}</p>
-        <p><strong>Balance:</strong> ₱{{ visit.balance | number:'1.2-2' }}</p>
+        <p><strong>Total Cost:</strong> ₱{{ visit.totalCost | number:'1.2-2' }}</p>
+        <p><strong>Total Paid:</strong> ₱{{ visit.totalPaid | number:'1.2-2' }}</p>
+        <p><strong>Balance:</strong>
+          <ion-text [color]="visit.balance > 0 ? 'danger' : 'success'">
+            ₱{{ visit.balance | number:'1.2-2' }}
+          </ion-text>
+        </p>
+
+        <ion-button expand="block" fill="outline" (click)="viewPayments(visit)" size="small">
+          View Payment History
+        </ion-button>
+        <ion-button expand="block" (click)="openPaymentForm(visit)" size="small" *ngIf="visit.balance > 0"
+          color="success">
+          Add Payment
+        </ion-button>
+        <ion-button expand="block" fill="outline" (click)="openEditVisit(visit)" size="small" color="warning">
+          Edit Visit
+        </ion-button>
+        <ion-button expand="block" fill="outline" (click)="deleteVisit(visit)" size="small" color="danger">
+          Delete Visit
+        </ion-button>
       </ion-card-content>
     </ion-card>
 
@@ -69,4 +97,239 @@
       <p>No visit records found for this patient</p>
     </ion-text>
   </div>
+
+  <!-- Payment History Modal -->
+  <ion-modal [isOpen]="selectedVisit !== null && !showPaymentForm" (didDismiss)="closePayments()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Payment History</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closePayments()">Close</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div *ngIf="selectedVisit">
+          <h3>{{ selectedVisit.procedureDone }}</h3>
+          <p><strong>Total Cost:</strong> ₱{{ selectedVisit.totalCost | number:'1.2-2' }}</p>
+          <p><strong>Total Paid:</strong> ₱{{ selectedVisit.totalPaid | number:'1.2-2' }}</p>
+          <p><strong>Remaining Balance:</strong>
+            <ion-text [color]="selectedVisit.balance > 0 ? 'danger' : 'success'">
+              ₱{{ selectedVisit.balance | number:'1.2-2' }}
+            </ion-text>
+          </p>
+
+          <h4 class="ion-margin-top">Payments</h4>
+          <ion-card *ngFor="let payment of payments">
+            <ion-card-content>
+              <p><strong>Date:</strong> {{ payment.paymentDate | date:'medium' }}</p>
+              <p><strong>Amount:</strong> ₱{{ payment.amount | number:'1.2-2' }}</p>
+              <p><strong>Method:</strong> {{ payment.paymentMethod }}</p>
+              <p *ngIf="payment.notes"><strong>Notes:</strong> {{ payment.notes }}</p>
+
+              <ion-button expand="block" fill="outline" (click)="openEditPayment(payment)" size="small" color="warning">
+                Edit Payment
+              </ion-button>
+              <ion-button expand="block" fill="outline" (click)="deletePayment(payment)" size="small" color="danger">
+                Delete Payment
+              </ion-button>
+            </ion-card-content>
+          </ion-card>
+
+          <ion-text *ngIf="payments.length === 0" class="ion-text-center">
+            <p>No payments recorded yet</p>
+          </ion-text>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Add Payment Modal -->
+  <ion-modal [isOpen]="showPaymentForm" (didDismiss)="cancelPayment()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Add Payment</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cancelPayment()">Cancel</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div *ngIf="selectedVisit">
+          <p><strong>Procedure:</strong> {{ selectedVisit.procedureDone }}</p>
+          <p><strong>Remaining Balance:</strong> ₱{{ selectedVisit.balance | number:'1.2-2' }}</p>
+
+          <ion-item>
+            <ion-label position="stacked">Payment Amount (₱) *</ion-label>
+            <ion-input type="number" [(ngModel)]="newPayment.amount" name="amount" placeholder="0.00" min="0"
+              step="0.01" [max]="selectedVisit.balance">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Payment Date *</ion-label>
+            <ion-input type="datetime-local" [(ngModel)]="newPayment.paymentDate" name="paymentDate">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Payment Method *</ion-label>
+            <ion-select [(ngModel)]="newPayment.paymentMethod" name="paymentMethod">
+              <ion-select-option value="Cash">Cash</ion-select-option>
+              <ion-select-option value="Credit Card">Credit Card</ion-select-option>
+              <ion-select-option value="Debit Card">Debit Card</ion-select-option>
+              <ion-select-option value="GCash">GCash</ion-select-option>
+              <ion-select-option value="PayMaya">PayMaya</ion-select-option>
+              <ion-select-option value="Bank Transfer">Bank Transfer</ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Notes</ion-label>
+            <ion-textarea [(ngModel)]="newPayment.notes" name="notes" rows="3" placeholder="Optional payment notes">
+            </ion-textarea>
+          </ion-item>
+
+          <ion-button expand="block" (click)="addPayment()" class="ion-margin-top">
+            Add Payment
+          </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Edit Visit Modal -->
+  <ion-modal [isOpen]="showEditVisitForm" (didDismiss)="cancelEditVisit()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Edit Visit</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cancelEditVisit()">Cancel</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div *ngIf="editingVisit">
+          <!-- Procedure -->
+          <ion-item>
+            <ion-label position="stacked">Procedure *</ion-label>
+            <ion-select [(ngModel)]="editingVisit.procedureDone" name="procedureDone" placeholder="Select procedure">
+              <ion-select-option *ngFor="let procedure of procedures" [value]="procedure">
+                {{ procedure }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <!-- Date of Visit -->
+          <ion-item>
+            <ion-label position="stacked">Date of Visit *</ion-label>
+            <ion-input type="datetime-local" [(ngModel)]="editingVisit.dateOfVisit" name="dateOfVisit" required>
+            </ion-input>
+          </ion-item>
+
+          <!-- Mode of Payment -->
+          <ion-item>
+            <ion-label position="stacked">Mode of Payment *</ion-label>
+            <ion-select [(ngModel)]="editingVisit.modeOfPayment" name="modeOfPayment" placeholder="Select payment mode">
+              <ion-select-option *ngFor="let mode of paymentModes" [value]="mode">
+                {{ mode }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <!-- Total Cost -->
+          <ion-item>
+            <ion-label position="stacked">Total Cost (₱) *</ion-label>
+            <ion-input type="number" [(ngModel)]="editingVisit.totalCost" name="totalCost" placeholder="0.00" min="0"
+              step="0.01">
+            </ion-input>
+          </ion-item>
+
+          <!-- Total Paid (Read-only, managed by payments) -->
+          <ion-item>
+            <ion-label position="stacked">Total Paid (₱)</ion-label>
+            <ion-input type="number" [(ngModel)]="editingVisit.totalPaid" name="totalPaid" placeholder="0.00" readonly>
+            </ion-input>
+          </ion-item>
+
+          <!-- Comments -->
+          <ion-item>
+            <ion-label position="stacked">Comments</ion-label>
+            <ion-textarea [(ngModel)]="editingVisit.comments" name="comments" rows="4"
+              placeholder="Additional notes...">
+            </ion-textarea>
+          </ion-item>
+
+          <ion-text color="medium" class="ion-padding">
+            <p><small>Note: Balance will be automatically recalculated. To modify payments, use the payment management
+                features.</small></p>
+          </ion-text>
+
+          <ion-button expand="block" (click)="updateVisit()" class="ion-margin-top" color="primary">
+            Update Visit
+          </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Edit Payment Modal -->
+  <ion-modal [isOpen]="showEditPaymentForm" (didDismiss)="cancelEditPayment()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Edit Payment</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cancelEditPayment()">Cancel</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div *ngIf="editingPayment">
+          <ion-item>
+            <ion-label position="stacked">Payment Amount (₱) *</ion-label>
+            <ion-input type="number" [(ngModel)]="editingPayment.amount" name="amount" placeholder="0.00" min="0"
+              step="0.01">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Payment Date *</ion-label>
+            <ion-input type="datetime-local" [(ngModel)]="editingPayment.paymentDate" name="paymentDate">
+            </ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Payment Method *</ion-label>
+            <ion-select [(ngModel)]="editingPayment.paymentMethod" name="paymentMethod">
+              <ion-select-option value="Cash">Cash</ion-select-option>
+              <ion-select-option value="Credit Card">Credit Card</ion-select-option>
+              <ion-select-option value="Debit Card">Debit Card</ion-select-option>
+              <ion-select-option value="GCash">GCash</ion-select-option>
+              <ion-select-option value="PayMaya">PayMaya</ion-select-option>
+              <ion-select-option value="Bank Transfer">Bank Transfer</ion-select-option>
+              <ion-select-option value="Down Payment">Down Payment</ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Notes</ion-label>
+            <ion-textarea [(ngModel)]="editingPayment.notes" name="notes" rows="3" placeholder="Optional payment notes">
+            </ion-textarea>
+          </ion-item>
+
+          <ion-text color="medium" class="ion-padding">
+            <p><small>Note: Visit balance will be automatically recalculated after updating the payment.</small></p>
+          </ion-text>
+
+          <ion-button expand="block" (click)="updatePayment()" class="ion-margin-top" color="primary">
+            Update Payment
+          </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

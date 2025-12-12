@@ -22,6 +22,7 @@ import {
 } from '@ionic/angular/standalone';
 import { VisitService, Visit } from '../services/visit';
 import { PatientService, Patient } from '../services/patient';
+import { PaymentService, Payment } from '../services/payment';
 
 @Component({
   selector: 'app-addvisit',
@@ -57,9 +58,12 @@ export class AddvisitPage implements OnInit {
     comments: '',
     dateOfVisit: new Date().toISOString(),
     modeOfPayment: '',
-    payment: 0,
+    totalCost: 0,
+    totalPaid: 0,
     balance: 0
   }
+
+  initialPayment: number = 0
 
   patients: Patient[] = []
   filteredPatients: Patient[] = []
@@ -88,13 +92,14 @@ export class AddvisitPage implements OnInit {
   ]
 
   paymentModes = [
-    'Cash',
+    'One-time Payment',
     'Installment'
   ]
 
   constructor(
     private visitService: VisitService,
     private patientService: PatientService,
+    private paymentService: PaymentService,
     private router: Router
   ) { }
 
@@ -137,6 +142,11 @@ export class AddvisitPage implements OnInit {
     this.filteredPatients = this.patients
   }
 
+  calculateBalance() {
+    this.visit.balance = this.visit.totalCost - this.initialPayment
+    this.visit.totalPaid = this.initialPayment
+  }
+
   async addVisit() {
     this.error = ''
     this.success = ''
@@ -160,17 +170,30 @@ export class AddvisitPage implements OnInit {
     }
 
     try {
+      // Calculate final totals
+      this.calculateBalance()
+
       console.log('Attempting to add visit:', this.visit)
       const visitId = await this.visitService.addVisit(this.visit)
       console.log('Visit added with ID:', visitId)
 
       if (visitId && visitId > 0) {
+        // If there's an initial payment, record it
+        if (this.initialPayment > 0) {
+          const payment: Payment = {
+            visitId: visitId,
+            amount: this.initialPayment,
+            paymentDate: new Date().toISOString(),
+            paymentMethod: this.visit.modeOfPayment === 'Cash' ? 'Cash' : 'Down Payment',
+            notes: 'Initial payment'
+          }
+          await this.paymentService.addPayment(payment)
+        }
+
         this.success = 'Visit added successfully!'
         alert(this.success)
         this.resetForm()
-        setTimeout(() => {
-          this.router.navigate(['/viewpatient'])
-        }, 1000)
+
       } else {
         this.error = 'Failed to add visit - no ID returned'
         console.error(this.error)
@@ -190,9 +213,11 @@ export class AddvisitPage implements OnInit {
       comments: '',
       dateOfVisit: new Date().toISOString(),
       modeOfPayment: '',
-      payment: 0,
+      totalCost: 0,
+      totalPaid: 0,
       balance: 0
     }
+    this.initialPayment = 0
     this.selectedPatient = null
     this.searchTerm = ''
     this.filteredPatients = this.patients

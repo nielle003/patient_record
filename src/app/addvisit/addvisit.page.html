@@ -66,17 +66,28 @@
       </ion-select>
     </ion-item>
 
-    <!-- Payment -->
+    <!-- Total Cost -->
     <ion-item>
-      <ion-label position="stacked">Payment (₱)</ion-label>
-      <ion-input type="number" [(ngModel)]="visit.payment" name="payment" placeholder="0.00" min="0" step="0.01">
+      <ion-label position="stacked">Total Cost (₱) *</ion-label>
+      <ion-input type="number" [(ngModel)]="visit.totalCost" name="totalCost" placeholder="0.00" min="0" step="0.01"
+        (ionChange)="calculateBalance()">
       </ion-input>
     </ion-item>
 
-    <!-- Balance -->
+    <!-- Initial Payment / Down Payment -->
+    <ion-item>
+      <ion-label position="stacked">
+        {{ visit.modeOfPayment === 'Installment' ? 'Down Payment (₱)' : 'Payment (₱)' }}
+      </ion-label>
+      <ion-input type="number" [(ngModel)]="initialPayment" name="initialPayment" placeholder="0.00" min="0" step="0.01"
+        (ionChange)="calculateBalance()">
+      </ion-input>
+    </ion-item>
+
+    <!-- Balance (Calculated) -->
     <ion-item>
       <ion-label position="stacked">Balance (₱)</ion-label>
-      <ion-input type="number" [(ngModel)]="visit.balance" name="balance" placeholder="0.00" min="0" step="0.01">
+      <ion-input type="number" [(ngModel)]="visit.balance" name="balance" placeholder="0.00" readonly>
       </ion-input>
     </ion-item>
 

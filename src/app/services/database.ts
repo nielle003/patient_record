@@ -63,6 +63,7 @@ export class DatabaseService {
         lastName TEXT,
         gender TEXT,
         birthday TEXT,
+        contactNumber TEXT,
         occupation TEXT,
         company TEXT,
         hmo TEXT,
@@ -79,9 +80,21 @@ export class DatabaseService {
         comments TEXT,
         dateOfVisit TEXT,
         modeOfPayment TEXT,
-        payment REAL,
+        totalCost REAL,
+        totalPaid REAL DEFAULT 0,
         balance REAL,
         FOREIGN KEY (patientId) REFERENCES patients(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        visitId INTEGER,
+        amount REAL,
+        paymentDate TEXT,
+        paymentMethod TEXT,
+        notes TEXT,
+        createdAt INTEGER,
+        FOREIGN KEY (visitId) REFERENCES visits(id)
       );
     `)
 

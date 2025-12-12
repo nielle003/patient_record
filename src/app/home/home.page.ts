@@ -22,4 +22,8 @@ export class HomePage {
   async addVisit() {
     this.router.navigate(['/addvisit']);
   }
+
+  async backup() {
+    this.router.navigate(['/backup']);
+  }
 }

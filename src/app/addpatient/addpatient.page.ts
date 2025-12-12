@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import {
   IonContent,
   IonHeader,
@@ -49,6 +49,7 @@ export class AddpatientPage implements OnInit {
     lastName: '',
     gender: '',
     birthday: '',
+    contactNumber: '',
     occupation: '',
     company: '',
     hmo: '',
@@ -59,13 +60,42 @@ export class AddpatientPage implements OnInit {
 
   error = ''
   success = ''
+  isEditMode = false
+  patientId: number | null = null
 
   constructor(
     private patientService: PatientService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
-  ngOnInit() {
+  async ngOnInit() {
+    // Check if we're in edit mode
+    const id = this.route.snapshot.paramMap.get('id')
+    if (id) {
+      this.isEditMode = true
+      this.patientId = parseInt(id, 10)
+      await this.loadPatient()
+    }
+  }
+
+  async loadPatient() {
+    if (this.patientId) {
+      try {
+        const patient = await this.patientService.getPatient(this.patientId)
+        if (patient) {
+          this.patient = patient
+        } else {
+          this.error = 'Patient not found'
+          alert(this.error)
+          this.router.navigate(['/viewpatient'])
+        }
+      } catch (err) {
+        console.error('Error loading patient:', err)
+        this.error = 'Failed to load patient data'
+        alert(this.error)
+      }
+    }
   }
 
   async addPatient() {
@@ -73,31 +103,50 @@ export class AddpatientPage implements OnInit {
     this.success = ''
 
     // Validate required fields
-    if (!this.patient.firstName || !this.patient.lastName || !this.patient.gender || !this.patient.birthday) {
-      this.error = 'Please fill in all required fields (Name, Gender, Birthday)'
+    if (!this.patient.firstName || !this.patient.lastName || !this.patient.gender || !this.patient.birthday || !this.patient.contactNumber) {
+      this.error = 'Please fill in all required fields (Name, Gender, Birthday, Contact Number)'
       return
     }
 
     try {
-      console.log('Attempting to add patient:', this.patient)
-      const patientId = await this.patientService.addPatient(this.patient)
-      console.log('Patient added with ID:', patientId)
+      if (this.isEditMode) {
+        // Update existing patient
+        console.log('Attempting to update patient:', this.patient)
+        const success = await this.patientService.updatePatient(this.patient)
 
-      if (patientId && patientId > 0) {
-        this.success = 'Patient added successfully!'
-        alert(this.success)
-        this.resetForm()
-        setTimeout(() => {
-          this.router.navigate(['/home'])
-        }, 1000)
+        if (success) {
+          this.success = 'Patient updated successfully!'
+          alert(this.success)
+          setTimeout(() => {
+            this.router.navigate(['/viewpatient'])
+          }, 1000)
+        } else {
+          this.error = 'Failed to update patient'
+          console.error(this.error)
+          alert(this.error)
+        }
       } else {
-        this.error = 'Failed to add patient - no ID returned'
-        console.error(this.error)
-        alert(this.error)
+        // Add new patient
+        console.log('Attempting to add patient:', this.patient)
+        const patientId = await this.patientService.addPatient(this.patient)
+        console.log('Patient added with ID:', patientId)
+
+        if (patientId && patientId > 0) {
+          this.success = 'Patient added successfully!'
+          alert(this.success)
+          this.resetForm()
+          setTimeout(() => {
+            this.router.navigate(['/home'])
+          }, 1000)
+        } else {
+          this.error = 'Failed to add patient - no ID returned'
+          console.error(this.error)
+          alert(this.error)
+        }
       }
     } catch (err) {
-      console.error('Error adding patient:', err)
-      this.error = 'An error occurred while adding patient: ' + (err as Error).message
+      console.error('Error saving patient:', err)
+      this.error = 'An error occurred while saving patient: ' + (err as Error).message
       alert(this.error)
     }
   }
@@ -108,6 +157,7 @@ export class AddpatientPage implements OnInit {
       lastName: '',
       gender: '',
       birthday: '',
+      contactNumber: '',
       occupation: '',
       company: '',
       hmo: '',

@@ -1,0 +1,107 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Backup & Restore</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Export Section -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="cloud-download-outline"></ion-icon>
+        Export Database
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>Export individual tables or all data as CSV files</p>
+
+      <ion-button expand="block" (click)="exportTable('users')" [disabled]="isLoading">
+        <ion-icon slot="start" name="share-outline"></ion-icon>
+        Export Users
+      </ion-button>
+
+      <ion-button expand="block" (click)="exportTable('patients')" [disabled]="isLoading">
+        <ion-icon slot="start" name="share-outline"></ion-icon>
+        Export Patients
+      </ion-button>
+
+      <ion-button expand="block" (click)="exportTable('visits')" [disabled]="isLoading">
+        <ion-icon slot="start" name="share-outline"></ion-icon>
+        Export Visits
+      </ion-button>
+
+      <ion-button expand="block" (click)="exportTable('payments')" [disabled]="isLoading">
+        <ion-icon slot="start" name="share-outline"></ion-icon>
+        Export Payments
+      </ion-button>
+
+      <ion-button expand="block" color="primary" (click)="exportAllTables()" [disabled]="isLoading">
+        <ion-icon slot="start" name="cloud-download-outline"></ion-icon>
+        Export All Tables
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Import Section -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="cloud-upload-outline"></ion-icon>
+        Import Database
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>Import CSV file to restore data. Filename should start with users_, patients_, or visits_</p>
+
+      <ion-button expand="block" color="secondary" (click)="importFile()" [disabled]="isLoading">
+        <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+        Select CSV File to Import
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Messages -->
+  <ion-text color="success" *ngIf="message">
+    <p class="ion-padding">{{ message }}</p>
+  </ion-text>
+
+  <ion-text color="danger" *ngIf="error">
+    <p class="ion-padding">{{ error }}</p>
+  </ion-text>
+
+  <!-- Backup Files List -->
+  <ion-card *ngIf="backupFiles.length > 0">
+    <ion-card-header>
+      <ion-card-title>Saved Backups (Local Storage)</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let file of backupFiles">
+          <ion-label>
+            <h3>{{ getTableName(file) }}</h3>
+            <p>{{ getFileDate(file) }}</p>
+          </ion-label>
+          <ion-button slot="end" fill="clear" (click)="restoreFromBackup(file)">
+            Restore
+          </ion-button>
+          <ion-button slot="end" fill="clear" color="danger" (click)="deleteBackup(file)">
+            Delete
+          </ion-button>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-text color="medium" *ngIf="backupFiles.length === 0 && !isLoading" class="ion-text-center">
+    <p>No backups found. Create a backup to get started.</p>
+  </ion-text>
+
+  <!-- Loading Indicator -->
+  <ion-text color="medium" *ngIf="isLoading" class="ion-text-center">
+    <p>Processing...</p>
+  </ion-text>
+</ion-content>

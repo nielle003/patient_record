@@ -7,6 +7,7 @@ export interface Patient {
     lastName: string
     gender: string
     birthday: string
+    contactNumber: string
     occupation: string
     company: string
     hmo: string
@@ -38,14 +39,15 @@ export class PatientService {
         try {
             const res: any = await this.db.run(
                 `INSERT INTO patients (
-        firstName, lastName, gender, birthday, occupation, 
+        firstName, lastName, gender, birthday, contactNumber, occupation, 
         company, hmo, hmoNumber, validId, idNumber, createdAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     patient.firstName,
                     patient.lastName,
                     patient.gender,
                     patient.birthday,
+                    patient.contactNumber,
                     patient.occupation || '',
                     patient.company || '',
                     patient.hmo || '',
@@ -84,7 +86,7 @@ export class PatientService {
         await this.init()
         const res: any = await this.db.run(
             `UPDATE patients SET 
-        firstName = ?, lastName = ?, gender = ?, birthday = ?, 
+        firstName = ?, lastName = ?, gender = ?, birthday = ?, contactNumber = ?, 
         occupation = ?, company = ?, hmo = ?, hmoNumber = ?, 
         validId = ?, idNumber = ?
       WHERE id = ?`,
@@ -93,6 +95,7 @@ export class PatientService {
                 patient.lastName,
                 patient.gender,
                 patient.birthday,
+                patient.contactNumber,
                 patient.occupation,
                 patient.company,
                 patient.hmo,
@@ -107,6 +110,24 @@ export class PatientService {
 
     async deletePatient(id: number): Promise<boolean> {
         await this.init()
+
+        // Delete in order: payments -> visits -> patient
+        // First delete all payments associated with this patient's visits
+        const visitsRes: any = await this.db.query(
+            'SELECT id FROM visits WHERE patientId = ?',
+            [id]
+        )
+
+        if (visitsRes.values && visitsRes.values.length > 0) {
+            for (const visit of visitsRes.values) {
+                await this.db.run('DELETE FROM payments WHERE visitId = ?', [visit.id])
+            }
+        }
+
+        // Then delete all visits
+        await this.db.run('DELETE FROM visits WHERE patientId = ?', [id])
+
+        // Finally delete the patient
         const res: any = await this.db.run('DELETE FROM patients WHERE id = ?', [id])
         return (res.changes?.changes ?? 0) > 0
     }

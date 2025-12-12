@@ -1,9 +1,9 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home"></ion-back-button>
+      <ion-back-button [defaultHref]="isEditMode ? '/viewpatient' : '/home'"></ion-back-button>
     </ion-buttons>
-    <ion-title>Add New Patient</ion-title>
+    <ion-title>{{ isEditMode ? 'Edit Patient' : 'Add New Patient' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -31,6 +31,12 @@
     <ion-item>
       <ion-label position="stacked">Birthday *</ion-label>
       <ion-input [(ngModel)]="patient.birthday" name="birthday" type="date"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Contact Number *</ion-label>
+      <ion-input [(ngModel)]="patient.contactNumber" name="contactNumber" type="tel"
+        placeholder="09XXXXXXXXX"></ion-input>
     </ion-item>
 
     <ion-item>
@@ -70,8 +76,8 @@
       <ion-input [(ngModel)]="patient.idNumber" name="idNumber" type="text"></ion-input>
     </ion-item>
 
-    <ion-button expand="full" (click)="addPatient()">Add Patient</ion-button>
-    <ion-button expand="full" fill="outline" (click)="resetForm()">Reset Form</ion-button>
+    <ion-button expand="full" (click)="addPatient()">{{ isEditMode ? 'Update Patient' : 'Add Patient' }}</ion-button>
+    <ion-button expand="full" fill="outline" (click)="resetForm()" *ngIf="!isEditMode">Reset Form</ion-button>
 
     <ion-text color="danger" *ngIf="error">
       <p>{{error}}</p>

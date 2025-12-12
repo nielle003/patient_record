@@ -8,7 +8,8 @@ export interface Visit {
     comments: string
     dateOfVisit: string
     modeOfPayment: string
-    payment: number
+    totalCost: number
+    totalPaid: number
     balance: number
 }
 
@@ -33,15 +34,16 @@ export class VisitService {
         const res: any = await this.db.run(
             `INSERT INTO visits (
         patientId, procedureDone, comments, dateOfVisit,
-        modeOfPayment, payment, balance
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        modeOfPayment, totalCost, totalPaid, balance
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 visit.patientId,
                 visit.procedureDone,
                 visit.comments,
                 visit.dateOfVisit,
                 visit.modeOfPayment,
-                visit.payment,
+                visit.totalCost,
+                visit.totalPaid,
                 visit.balance
             ]
         )
@@ -70,14 +72,15 @@ export class VisitService {
         const res: any = await this.db.run(
             `UPDATE visits SET 
         procedureDone = ?, comments = ?, dateOfVisit = ?,
-        modeOfPayment = ?, payment = ?, balance = ?
+        modeOfPayment = ?, totalCost = ?, totalPaid = ?, balance = ?
       WHERE id = ?`,
             [
                 visit.procedureDone,
                 visit.comments,
                 visit.dateOfVisit,
                 visit.modeOfPayment,
-                visit.payment,
+                visit.totalCost,
+                visit.totalPaid,
                 visit.balance,
                 visit.id
             ]

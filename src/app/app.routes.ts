@@ -16,18 +16,26 @@ export const routes: Routes = [
   },
   {
     path: 'register',
-    loadComponent: () => import('./register/register.page').then( m => m.RegisterPage)
+    loadComponent: () => import('./register/register.page').then(m => m.RegisterPage)
   },
   {
     path: 'addpatient',
-    loadComponent: () => import('./addpatient/addpatient.page').then( m => m.AddpatientPage)
+    loadComponent: () => import('./addpatient/addpatient.page').then(m => m.AddpatientPage)
+  },
+  {
+    path: 'addpatient/:id',
+    loadComponent: () => import('./addpatient/addpatient.page').then(m => m.AddpatientPage)
   },
   {
     path: 'viewpatient',
-    loadComponent: () => import('./viewpatient/viewpatient.page').then( m => m.ViewpatientPage)
+    loadComponent: () => import('./viewpatient/viewpatient.page').then(m => m.ViewpatientPage)
   },
   {
     path: 'addvisit',
-    loadComponent: () => import('./addvisit/addvisit.page').then( m => m.AddvisitPage)
+    loadComponent: () => import('./addvisit/addvisit.page').then(m => m.AddvisitPage)
+  },
+  {
+    path: 'backup',
+    loadComponent: () => import('./backup/backup.page').then(m => m.BackupPage)
   },
 ];
