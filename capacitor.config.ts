@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.ionic.starter',
-  appName: 'patient_record_system',
+  appName: 'Patient Records',
   webDir: 'www'
 };
 
