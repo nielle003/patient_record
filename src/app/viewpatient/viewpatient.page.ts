@@ -26,7 +26,8 @@ import {
   IonInput,
   IonSelect,
   IonSelectOption,
-  AlertController
+  AlertController,
+  IonIcon
 } from '@ionic/angular/standalone';
 import { PatientService, Patient } from '../services/patient';
 import { VisitService, Visit } from '../services/visit';
@@ -63,15 +64,24 @@ import { PaymentService, Payment } from '../services/payment';
     IonTextarea,
     IonInput,
     IonSelect,
-    IonSelectOption
+    IonSelectOption,
+    IonIcon
   ]
 })
 export class ViewpatientPage implements OnInit {
+  Math = Math  // For use in template
   patients: Patient[] = []
   filteredPatients: Patient[] = []
+  paginatedPatients: Patient[] = []
   selectedPatient: Patient | null = null
   visits: Visit[] = []
   searchTerm = ''
+
+  // Pagination properties
+  currentPage: number = 1
+  itemsPerPage: number = 10
+  totalPages: number = 1
+
   selectedVisit: Visit | null = null
   payments: Payment[] = []
   showPaymentForm = false
@@ -126,6 +136,8 @@ export class ViewpatientPage implements OnInit {
   async loadPatients() {
     this.patients = await this.patientService.getAllPatients()
     this.filteredPatients = this.patients
+    this.currentPage = 1
+    this.updatePagination()
     console.log('Loaded patients:', this.patients)
   }
 
@@ -142,6 +154,9 @@ export class ViewpatientPage implements OnInit {
         (patient.hmoNumber && patient.hmoNumber.toLowerCase().includes(query))
       )
     }
+
+    this.currentPage = 1
+    this.updatePagination()
   }
 
   async selectPatient(patient: Patient) {
@@ -155,6 +170,38 @@ export class ViewpatientPage implements OnInit {
   backToList() {
     this.selectedPatient = null
     this.visits = []
+  }
+
+  updatePagination() {
+    this.totalPages = Math.ceil(this.filteredPatients.length / this.itemsPerPage)
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage
+    const endIndex = startIndex + this.itemsPerPage
+    this.paginatedPatients = this.filteredPatients.slice(startIndex, endIndex)
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++
+      this.updatePagination()
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--
+      this.updatePagination()
+    }
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page
+      this.updatePagination()
+    }
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1)
   }
 
   editPatient(patient: Patient) {

@@ -2,8 +2,10 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-back-button *ngIf="!selectedPatient" defaultHref="/home"></ion-back-button>
-      <ion-button *ngIf="selectedPatient" (click)="backToList()">
-        <ion-label>Back</ion-label>
+      <ion-button *ngIf="selectedPatient" (click)="backToList()" fill="clear"
+        style="--color: white; --color-hover: rgba(255, 255, 255, 0.8);">
+        <ion-icon slot="start" name="arrow-back" style="font-size: 24px; margin-right: 4px;"></ion-icon>
+        Back
       </ion-button>
     </ion-buttons>
     <ion-title>{{ selectedPatient ? 'Patient Details' : 'View Patients' }}</ion-title>
@@ -12,90 +14,235 @@
 
 <ion-content class="ion-padding">
   <!-- Patient List View -->
-  <div *ngIf="!selectedPatient">
+  <div *ngIf="!selectedPatient" style="max-width: 800px; margin: 0 auto;">
     <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="handleSearch($event)"
       placeholder="Search by name or HMO number">
     </ion-searchbar>
 
-    <ion-list *ngIf="filteredPatients.length > 0">
-      <ion-item *ngFor="let patient of filteredPatients" (click)="selectPatient(patient)" button>
-        <ion-label>
-          <h2>{{ patient.firstName }} {{ patient.lastName }}</h2>
-          <p>{{ patient.gender }} • Age {{ getAge(patient.birthday) }}</p>
-          <p *ngIf="patient.hmoNumber">HMO: {{ patient.hmo }} - {{ patient.hmoNumber }}</p>
-        </ion-label>
-      </ion-item>
+    <!-- Pagination Info -->
+    <div *ngIf="filteredPatients.length > 0"
+      style="text-align: center; margin: 12px 0; color: var(--ion-color-medium);">
+      <p style="font-size: 0.9rem; margin: 0;">
+        Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} - {{ Math.min(currentPage * itemsPerPage,
+        filteredPatients.length) }} of {{ filteredPatients.length }} patients
+      </p>
+    </div>
+
+    <ion-list *ngIf="paginatedPatients.length > 0" style="background: transparent;">
+      <ion-card *ngFor="let patient of paginatedPatients" (click)="selectPatient(patient)"
+        style="cursor: pointer; margin: 12px 16px; transition: all 0.3s ease;">
+        <ion-card-content style="padding: 20px;">
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;">
+
+            <!-- Patient Name - Large & Centered -->
+            <h2
+              style="font-size: 1.5rem; font-weight: 700; color: var(--ion-color-primary); margin: 8px 0 4px 0; letter-spacing: 0.5px;">
+              {{ patient.firstName }} {{ patient.lastName }}
+            </h2>
+
+            <!-- Patient Info -->
+            <div style="display: flex; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap;">
+              <span
+                style="display: flex; align-items: center; gap: 4px; color: var(--ion-color-medium); font-size: 0.9rem;">
+                <ion-icon name="transgender" style="font-size: 16px;"></ion-icon>
+                {{ patient.gender }}
+              </span>
+              <span
+                style="display: flex; align-items: center; gap: 4px; color: var(--ion-color-medium); font-size: 0.9rem;">
+                <ion-icon name="calendar" style="font-size: 16px;"></ion-icon>
+                Age {{ getAge(patient.birthday) }}
+              </span>
+            </div>
+
+            <!-- HMO Badge -->
+            <div *ngIf="patient.hmoNumber"
+              style="background: linear-gradient(135deg, rgba(90, 124, 89, 0.1), rgba(74, 222, 128, 0.1)); padding: 8px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;">
+              <ion-icon name="shield-checkmark" style="color: var(--ion-color-tertiary); font-size: 18px;"></ion-icon>
+              <span style="color: var(--ion-color-tertiary); font-weight: 600; font-size: 0.875rem;">
+                {{ patient.hmo }} - {{ patient.hmoNumber }}
+              </span>
+            </div>
+
+            <!-- View Arrow -->
+            <ion-icon name="chevron-down"
+              style="color: var(--ion-color-primary); font-size: 24px; margin-top: 8px; animation: bounce 2s infinite;"></ion-icon>
+          </div>
+        </ion-card-content>
+      </ion-card>
     </ion-list>
 
+    <!-- Pagination Controls -->
+    <div *ngIf="totalPages > 1"
+      style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 24px 16px; flex-wrap: wrap;">
+      <ion-button fill="outline" size="small" (click)="previousPage()" [disabled]="currentPage === 1">
+        <ion-icon slot="icon-only" name="chevron-back"></ion-icon>
+      </ion-button>
+
+      <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+        <ion-button *ngFor="let page of pageNumbers" [fill]="currentPage === page ? 'solid' : 'outline'" size="small"
+          (click)="goToPage(page)" [color]="currentPage === page ? 'primary' : 'medium'" style="min-width: 40px;">
+          {{ page }}
+        </ion-button>
+      </div>
+
+      <ion-button fill="outline" size="small" (click)="nextPage()" [disabled]="currentPage === totalPages">
+        <ion-icon slot="icon-only" name="chevron-forward"></ion-icon>
+      </ion-button>
+    </div>
+
     <ion-text *ngIf="filteredPatients.length === 0" class="ion-text-center">
-      <p>No patients found</p>
+      <div style="text-align: center; padding: 60px 20px;">
+        <ion-icon name="people-outline"
+          style="font-size: 80px; color: var(--ion-color-medium); opacity: 0.5;"></ion-icon>
+        <p style="color: var(--ion-color-medium); margin-top: 16px; font-size: 1.1rem;">No patients found</p>
+      </div>
     </ion-text>
   </div>
 
   <!-- Patient Details and Visits View -->
-  <div *ngIf="selectedPatient">
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</ion-card-title>
+  <div *ngIf="selectedPatient" style="max-width: 1000px; margin: 0 auto;">
+    <!-- Patient Info Card -->
+    <ion-card style="margin-top: 0;">
+      <ion-card-header
+        style="background: linear-gradient(135deg, #1a3d1a, #2d5a2e); color: white; border-bottom: none;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+
+          <div>
+            <ion-card-title style="color: white; font-size: 1.5rem; margin-bottom: 4px;">
+              {{ selectedPatient.firstName }} {{ selectedPatient.lastName }}
+            </ion-card-title>
+            <p style="margin: 0; opacity: 0.9;">{{ selectedPatient.gender }} • Age {{ getAge(selectedPatient.birthday)
+              }}</p>
+          </div>
+        </div>
       </ion-card-header>
       <ion-card-content>
-        <p><strong>Gender:</strong> {{ selectedPatient.gender }}</p>
-        <p><strong>Birthday:</strong> {{ selectedPatient.birthday }} (Age {{ getAge(selectedPatient.birthday) }})</p>
-        <p *ngIf="selectedPatient.contactNumber"><strong>Contact Number:</strong> {{ selectedPatient.contactNumber }}
-        </p>
-        <p *ngIf="selectedPatient.occupation"><strong>Occupation:</strong> {{ selectedPatient.occupation }}</p>
-        <p *ngIf="selectedPatient.company"><strong>Company:</strong> {{ selectedPatient.company }}</p>
-        <p *ngIf="selectedPatient.hmo"><strong>HMO:</strong> {{ selectedPatient.hmo }}</p>
-        <p *ngIf="selectedPatient.hmoNumber"><strong>HMO Number:</strong> {{ selectedPatient.hmoNumber }}</p>
-        <p *ngIf="selectedPatient.validId"><strong>Valid ID:</strong> {{ selectedPatient.validId }}</p>
-        <p *ngIf="selectedPatient.idNumber"><strong>ID Number:</strong> {{ selectedPatient.idNumber }}</p>
+        <div class="info-row">
+          <strong>Birthday</strong>
+          <span>{{ selectedPatient.birthday }}</span>
+        </div>
+        <div class="info-row" *ngIf="selectedPatient.contactNumber">
+          <strong>Contact Number</strong>
+          <span>{{ selectedPatient.contactNumber }}</span>
+        </div>
+        <div class="info-row" *ngIf="selectedPatient.occupation">
+          <strong>Occupation</strong>
+          <span>{{ selectedPatient.occupation }}</span>
+        </div>
+        <div class="info-row" *ngIf="selectedPatient.company">
+          <strong>Company</strong>
+          <span>{{ selectedPatient.company }}</span>
+        </div>
+        <div class="info-row" *ngIf="selectedPatient.hmo">
+          <strong>HMO Provider</strong>
+          <span>{{ selectedPatient.hmo }}</span>
+        </div>
+        <div class="info-row" *ngIf="selectedPatient.hmoNumber">
+          <strong>HMO Number</strong>
+          <span>{{ selectedPatient.hmoNumber }}</span>
+        </div>
+        <div class="info-row" *ngIf="selectedPatient.validId">
+          <strong>Valid ID</strong>
+          <span>{{ selectedPatient.validId }}</span>
+        </div>
+        <div class="info-row" *ngIf="selectedPatient.idNumber">
+          <strong>ID Number</strong>
+          <span>{{ selectedPatient.idNumber }}</span>
+        </div>
 
-        <ion-button expand="block" (click)="editPatient(selectedPatient)" color="primary">
-          Edit Patient Information
-        </ion-button>
-        <ion-button expand="block" (click)="deletePatient(selectedPatient)" color="danger" fill="outline">
-          Delete Patient
-        </ion-button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px;">
+          <ion-button expand="block" (click)="editPatient(selectedPatient)" color="primary" fill="solid">
+            <ion-icon slot="start" name="create"></ion-icon>
+            Edit
+          </ion-button>
+          <ion-button expand="block" (click)="deletePatient(selectedPatient)" color="danger" fill="outline">
+            <ion-icon slot="start" name="trash"></ion-icon>
+            Delete
+          </ion-button>
+        </div>
       </ion-card-content>
     </ion-card>
 
-    <h2>Visit History</h2>
+    <!-- Visit History Section -->
+    <div style="margin-top: 32px;">
+      <h2 style="padding: 0 16px; display: flex; align-items: center; gap: 8px;">
+        <ion-icon name="calendar" style="color: var(--ion-color-primary);"></ion-icon>
+        Visit History
+      </h2>
 
-    <ion-card *ngFor="let visit of visits">
-      <ion-card-header>
-        <ion-card-title>{{ visit.dateOfVisit | date:'medium' }}</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p><strong>Procedure:</strong> {{ visit.procedureDone }}</p>
-        <p *ngIf="visit.comments"><strong>Comments:</strong> {{ visit.comments }}</p>
-        <p><strong>Payment Mode:</strong> {{ visit.modeOfPayment }}</p>
-        <p><strong>Total Cost:</strong> ₱{{ visit.totalCost | number:'1.2-2' }}</p>
-        <p><strong>Total Paid:</strong> ₱{{ visit.totalPaid | number:'1.2-2' }}</p>
-        <p><strong>Balance:</strong>
-          <ion-text [color]="visit.balance > 0 ? 'danger' : 'success'">
-            ₱{{ visit.balance | number:'1.2-2' }}
-          </ion-text>
-        </p>
+      <ion-card *ngFor="let visit of visits" style="border-left: 4px solid var(--ion-color-primary);">
+        <ion-card-header>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <ion-card-title style="font-size: 1rem;">{{ visit.dateOfVisit | date:'medium' }}</ion-card-title>
+            <span [ngClass]="visit.balance > 0 ? 'badge badge-warning' : 'badge badge-success'">
+              {{ visit.balance > 0 ? 'Pending' : 'Paid' }}
+            </span>
+          </div>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="info-row">
+            <strong>Procedure</strong>
+            <span>{{ visit.procedureDone }}</span>
+          </div>
+          <div class="info-row" *ngIf="visit.comments">
+            <strong>Comments</strong>
+            <span>{{ visit.comments }}</span>
+          </div>
+          <div class="info-row">
+            <strong>Payment Mode</strong>
+            <span>{{ visit.modeOfPayment }}</span>
+          </div>
+          <div style="background: var(--ion-color-light); padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <div class="info-row" style="border: none;">
+              <strong>Total Cost</strong>
+              <span style="font-weight: 600;">₱{{ visit.totalCost | number:'1.2-2' }}</span>
+            </div>
+            <div class="info-row" style="border: none;">
+              <strong>Total Paid</strong>
+              <span style="font-weight: 600; color: var(--ion-color-success);">₱{{ visit.totalPaid | number:'1.2-2'
+                }}</span>
+            </div>
+            <div class="info-row" style="border: none;">
+              <strong>Balance</strong>
+              <span style="font-weight: 700; font-size: 1.1rem;"
+                [style.color]="visit.balance > 0 ? 'var(--ion-color-danger)' : 'var(--ion-color-success)'">
+                ₱{{ visit.balance | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
 
-        <ion-button expand="block" fill="outline" (click)="viewPayments(visit)" size="small">
-          View Payment History
-        </ion-button>
-        <ion-button expand="block" (click)="openPaymentForm(visit)" size="small" *ngIf="visit.balance > 0"
-          color="success">
-          Add Payment
-        </ion-button>
-        <ion-button expand="block" fill="outline" (click)="openEditVisit(visit)" size="small" color="warning">
-          Edit Visit
-        </ion-button>
-        <ion-button expand="block" fill="outline" (click)="deleteVisit(visit)" size="small" color="danger">
-          Delete Visit
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
+            <ion-button expand="block" fill="outline" (click)="viewPayments(visit)" size="small">
+              <ion-icon slot="start" name="wallet"></ion-icon>
+              Payments
+            </ion-button>
+            <ion-button expand="block" (click)="openPaymentForm(visit)" size="small" *ngIf="visit.balance > 0"
+              color="success">
+              <ion-icon slot="start" name="add-circle"></ion-icon>
+              Add Payment
+            </ion-button>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+            <ion-button expand="block" fill="outline" (click)="openEditVisit(visit)" size="small" color="warning">
+              <ion-icon slot="start" name="create"></ion-icon>
+              Edit
+            </ion-button>
+            <ion-button expand="block" fill="outline" (click)="deleteVisit(visit)" size="small" color="danger">
+              <ion-icon slot="start" name="trash"></ion-icon>
+              Delete
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
 
-    <ion-text *ngIf="visits.length === 0" class="ion-text-center">
-      <p>No visit records found for this patient</p>
-    </ion-text>
+      <ion-text *ngIf="visits.length === 0" class="ion-text-center">
+        <div style="text-align: center; padding: 60px 20px;">
+          <ion-icon name="calendar-outline"
+            style="font-size: 80px; color: var(--ion-color-medium); opacity: 0.5;"></ion-icon>
+          <p style="color: var(--ion-color-medium); margin-top: 16px; font-size: 1.1rem;">No visit records found</p>
+        </div>
+      </ion-text>
+    </div>
   </div>
 
   <!-- Payment History Modal -->

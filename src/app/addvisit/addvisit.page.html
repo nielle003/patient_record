@@ -3,115 +3,164 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/viewpatient"></ion-back-button>
     </ion-buttons>
-    <ion-title>Add Visit</ion-title>
+    <ion-title>Add Visit Record</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <form>
-    <!-- Patient Search -->
-    <ion-item>
-      <ion-label position="stacked">Patient *</ion-label>
-      <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="handleSearch($event)" name="patientSearch"
-        placeholder="Search patient by name or HMO">
-      </ion-searchbar>
-    </ion-item>
+  <div style="max-width: 800px; margin: 0 auto;">
+    <form>
+      <!-- Patient Selection Card -->
+      <ion-card style="margin-top: 0;">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="person-circle" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
+            Select Patient
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item lines="none" *ngIf="!selectedPatient">
+            <ion-label position="stacked">Search Patient *</ion-label>
+            <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="handleSearch($event)" name="patientSearch"
+              placeholder="Search by name or HMO number" style="padding: 0;">
+            </ion-searchbar>
+          </ion-item>
 
-    <!-- Selected Patient Display -->
-    <ion-item *ngIf="selectedPatient" lines="none">
-      <ion-label>
-        <h3>{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</h3>
-        <p>{{ selectedPatient.gender }} • Age {{ selectedPatient.birthday }}</p>
-      </ion-label>
-      <ion-button fill="clear" slot="end" (click)="clearPatientSelection()">
-        Clear
-      </ion-button>
-    </ion-item>
+          <!-- Selected Patient Display -->
+          <div *ngIf="selectedPatient"
+            style="background: var(--ion-color-light); padding: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <ion-icon name="person-circle" style="font-size: 40px; color: var(--ion-color-primary);"></ion-icon>
+              <div>
+                <h3 style="margin: 0; font-weight: 600;">{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}
+                </h3>
+                <p style="margin: 4px 0 0 0; color: var(--ion-color-medium); font-size: 0.875rem;">
+                  {{ selectedPatient.gender }} • Age {{ selectedPatient.birthday }}
+                </p>
+              </div>
+            </div>
+            <ion-button fill="clear" (click)="clearPatientSelection()" color="medium">
+              <ion-icon name="close-circle"></ion-icon>
+            </ion-button>
+          </div>
 
-    <!-- Patient Search Results -->
-    <ion-list *ngIf="filteredPatients.length > 0 && !selectedPatient && searchTerm">
-      <ion-item *ngFor="let patient of filteredPatients" (click)="selectPatient(patient)" button>
-        <ion-label>
-          <h3>{{ patient.firstName }} {{ patient.lastName }}</h3>
-          <p>{{ patient.gender }} • {{ patient.birthday }}</p>
-          <p *ngIf="patient.hmoNumber">HMO: {{ patient.hmo }} - {{ patient.hmoNumber }}</p>
-        </ion-label>
-      </ion-item>
-    </ion-list>
+          <!-- Patient Search Results -->
+          <ion-list *ngIf="filteredPatients.length > 0 && !selectedPatient && searchTerm" style="margin-top: 12px;">
+            <ion-item *ngFor="let patient of filteredPatients" (click)="selectPatient(patient)" button lines="none"
+              style="margin: 4px 0;">
+              <ion-icon name="person-circle" slot="start"
+                style="font-size: 32px; color: var(--ion-color-primary);"></ion-icon>
+              <ion-label>
+                <h3 style="font-weight: 600;">{{ patient.firstName }} {{ patient.lastName }}</h3>
+                <p style="color: var(--ion-color-medium); font-size: 0.875rem;">{{ patient.gender }} • {{
+                  patient.birthday }}</p>
+                <p *ngIf="patient.hmoNumber" style="color: var(--ion-color-tertiary); font-size: 0.875rem;">
+                  <ion-icon name="shield-checkmark" style="vertical-align: middle;"></ion-icon>
+                  {{ patient.hmo }} - {{ patient.hmoNumber }}
+                </p>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
 
-    <!-- Procedure -->
-    <ion-item>
-      <ion-label position="stacked">Procedure *</ion-label>
-      <ion-select [(ngModel)]="visit.procedureDone" name="procedureDone" placeholder="Select procedure">
-        <ion-select-option *ngFor="let procedure of procedures" [value]="procedure">
-          {{ procedure }}
-        </ion-select-option>
-      </ion-select>
-    </ion-item>
+      <!-- Visit Details Card -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="medical" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
+            Visit Details
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item lines="none">
+            <ion-label position="stacked">Procedure *</ion-label>
+            <ion-select [(ngModel)]="visit.procedureDone" name="procedureDone" placeholder="Select procedure"
+              interface="action-sheet">
+              <ion-select-option *ngFor="let procedure of procedures" [value]="procedure">
+                {{ procedure }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
 
-    <!-- Date of Visit -->
-    <ion-item>
-      <ion-label position="stacked">Date of Visit *</ion-label>
-      <ion-input type="datetime-local" [(ngModel)]="visit.dateOfVisit" name="dateOfVisit" required>
-      </ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Date of Visit *</ion-label>
+            <ion-input type="datetime-local" [(ngModel)]="visit.dateOfVisit" name="dateOfVisit" required>
+            </ion-input>
+          </ion-item>
 
-    <!-- Mode of Payment -->
-    <ion-item>
-      <ion-label position="stacked">Mode of Payment *</ion-label>
-      <ion-select [(ngModel)]="visit.modeOfPayment" name="modeOfPayment" placeholder="Select payment mode">
-        <ion-select-option *ngFor="let mode of paymentModes" [value]="mode">
-          {{ mode }}
-        </ion-select-option>
-      </ion-select>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Comments</ion-label>
+            <ion-textarea [(ngModel)]="visit.comments" name="comments" rows="3" placeholder="Additional notes...">
+            </ion-textarea>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
 
-    <!-- Total Cost -->
-    <ion-item>
-      <ion-label position="stacked">Total Cost (₱) *</ion-label>
-      <ion-input type="number" [(ngModel)]="visit.totalCost" name="totalCost" placeholder="0.00" min="0" step="0.01"
-        (ionChange)="calculateBalance()">
-      </ion-input>
-    </ion-item>
+      <!-- Payment Information Card -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="cash" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
+            Payment Information
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item lines="none">
+            <ion-label position="stacked">Mode of Payment *</ion-label>
+            <ion-select [(ngModel)]="visit.modeOfPayment" name="modeOfPayment" placeholder="Select payment mode"
+              interface="action-sheet">
+              <ion-select-option *ngFor="let mode of paymentModes" [value]="mode">
+                {{ mode }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
 
-    <!-- Initial Payment / Down Payment -->
-    <ion-item>
-      <ion-label position="stacked">
-        {{ visit.modeOfPayment === 'Installment' ? 'Down Payment (₱)' : 'Payment (₱)' }}
-      </ion-label>
-      <ion-input type="number" [(ngModel)]="initialPayment" name="initialPayment" placeholder="0.00" min="0" step="0.01"
-        (ionChange)="calculateBalance()">
-      </ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Total Cost (₱) *</ion-label>
+            <ion-input type="number" [(ngModel)]="visit.totalCost" name="totalCost" placeholder="0.00" min="0"
+              step="0.01" (ionChange)="calculateBalance()">
+            </ion-input>
+          </ion-item>
 
-    <!-- Balance (Calculated) -->
-    <ion-item>
-      <ion-label position="stacked">Balance (₱)</ion-label>
-      <ion-input type="number" [(ngModel)]="visit.balance" name="balance" placeholder="0.00" readonly>
-      </ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">
+              {{ visit.modeOfPayment === 'Installment' ? 'Down Payment (₱)' : 'Payment (₱)' }}
+            </ion-label>
+            <ion-input type="number" [(ngModel)]="initialPayment" name="initialPayment" placeholder="0.00" min="0"
+              step="0.01" (ionChange)="calculateBalance()">
+            </ion-input>
+          </ion-item>
 
-    <!-- Comments -->
-    <ion-item>
-      <ion-label position="stacked">Comments</ion-label>
-      <ion-textarea [(ngModel)]="visit.comments" name="comments" rows="4" placeholder="Additional notes...">
-      </ion-textarea>
-    </ion-item>
+          <div style="background: var(--ion-color-light); padding: 16px; border-radius: 8px; margin: 16px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 600; color: var(--ion-color-medium);">Balance Due:</span>
+              <span style="font-size: 1.5rem; font-weight: 700; color: var(--ion-color-primary);">
+                ₱{{ visit.balance | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
 
-    <!-- Error/Success Messages -->
-    <ion-text color="danger" *ngIf="error">
-      <p class="ion-padding">{{ error }}</p>
-    </ion-text>
-    <ion-text color="success" *ngIf="success">
-      <p class="ion-padding">{{ success }}</p>
-    </ion-text>
+      <!-- Messages and Actions -->
+      <div style="padding: 0 16px; margin-top: 24px;">
+        <ion-text color="danger" *ngIf="error">
+          <p style="text-align: center;">{{ error }}</p>
+        </ion-text>
+        <ion-text color="success" *ngIf="success">
+          <p style="text-align: center;">{{ success }}</p>
+        </ion-text>
 
-    <!-- Buttons -->
-    <ion-button expand="block" (click)="addVisit()" class="ion-margin-top">
-      Add Visit
-    </ion-button>
-    <ion-button expand="block" fill="outline" (click)="resetForm()">
-      Reset Form
-    </ion-button>
-  </form>
+        <ion-button expand="block" (click)="addVisit()" color="primary">
+          <ion-icon slot="start" name="checkmark-circle"></ion-icon>
+          Add Visit Record
+        </ion-button>
+        <ion-button expand="block" fill="outline" (click)="resetForm()" color="medium">
+          <ion-icon slot="start" name="refresh"></ion-icon>
+          Reset Form
+        </ion-button>
+      </div>
+    </form>
+  </div>
 </ion-content>

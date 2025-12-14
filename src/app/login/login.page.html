@@ -1,21 +1,55 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Login</ion-title>
+    <ion-title>Patient Record System</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-item>
-    <ion-label position="stacked">Username</ion-label>
-    <ion-input [(ngModel)]="username"></ion-input>
-  </ion-item>
+  <div style="max-width: 400px; margin: 0 auto; padding-top: 60px;">
 
-  <ion-item>
-    <ion-label position="stacked">Password</ion-label>
-    <ion-input type="password" [(ngModel)]="password"></ion-input>
-  </ion-item>
+    <!-- Login Form -->
+    <ion-card style="margin: 0; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <ion-icon name="medical" style="font-size: 64px; color: var(--ion-color-primary);"></ion-icon>
+        <h1 style="margin-top: 16px; color: var(--ion-color-primary);">Welcome Back</h1>
+        <p style="color: var(--ion-color-medium); margin-top: 8px;">Sign in to manage patient records</p>
+      </div>
+      <ion-card-content style="padding: 32px 24px;">
+        <ion-item lines="none"
+          style="border: 1px solid var(--ion-color-medium); border-radius: 8px; margin-bottom: 16px;">
+          <ion-label position="stacked">Username</ion-label>
+          <ion-input [(ngModel)]="username" type="text" placeholder="Enter your username"></ion-input>
+        </ion-item>
 
-  <ion-button expand="full" (click)="login()">Login</ion-button>
-  <ion-text color="danger" *ngIf="error">{{error}}</ion-text>
-  <ion-button expand="full" fill="clear" routerLink="/register">Don't have an account? Register</ion-button>
+        <ion-item lines="none"
+          style="border: 1px solid var(--ion-color-medium); border-radius: 8px; margin-bottom: 16px;">
+          <ion-label position="stacked">Password</ion-label>
+          <ion-input type="password" [(ngModel)]="password" placeholder="Enter your password"></ion-input>
+        </ion-item>
+
+        <ion-text color="danger" *ngIf="error">
+          <p style="margin: 16px 0; text-align: center;">{{error}}</p>
+        </ion-text>
+
+        <ion-button expand="block" (click)="login()" style="margin-top: 24px;">
+          <span style="display: flex; align-items: center; justify-content: center; width: 100%;">
+            <ion-icon slot="start" name="log-in" style="margin-right: 8px;"></ion-icon>
+            Sign In
+          </span>
+        </ion-button>
+
+        <div style="text-align: center; margin-top: 24px;">
+          <ion-text color="medium">
+            <p style="margin-bottom: 8px;">Don't have an account?</p>
+          </ion-text>
+          <ion-button expand="block" fill="outline" routerLink="/register">
+            <span style="display: flex; align-items: center; justify-content: center; width: 100%;">
+              <ion-icon slot="start" name="person-add" style="margin-right: 8px;"></ion-icon>
+              Create Account
+            </span>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

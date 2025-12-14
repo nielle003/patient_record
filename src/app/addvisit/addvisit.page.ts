@@ -18,8 +18,14 @@ import {
   IonButtons,
   IonTextarea,
   IonSearchbar,
-  IonList
+  IonList,
+  IonIcon,
+  IonCard,
+  IonCardContent,
+  IonCardTitle,
+  IonCardHeader
 } from '@ionic/angular/standalone';
+
 import { VisitService, Visit } from '../services/visit';
 import { PatientService, Patient } from '../services/patient';
 import { PaymentService, Payment } from '../services/payment';
@@ -48,7 +54,12 @@ import { PaymentService, Payment } from '../services/payment';
     IonButtons,
     IonTextarea,
     IonSearchbar,
-    IonList
+    IonList,
+    IonIcon,
+    IonCard,
+    IonCardContent,
+    IonCardTitle,
+    IonCardHeader
   ]
 })
 export class AddvisitPage implements OnInit {

@@ -1,12 +1,58 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Home</ion-title>
+    <ion-title>Dashboard</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-button expand="full" (click)="patientRecords()">Register New Patient</ion-button>
-  <ion-button expand="full" (click)="viewPatients()">View Existing Patients</ion-button>
-  <ion-button expand="full" (click)="addVisit()">Add New Transaction for a Patient</ion-button>
-  <ion-button expand="full" (click)="backup()">Backup</ion-button>
+  <!-- Welcome Section -->
+  <div style="text-align: center; padding: 24px 16px 32px;">
+    <h1 style="color: var(--ion-color-primary); margin-bottom: 8px;">Patient Management</h1>
+    <p style="color: var(--ion-color-medium); font-size: 1rem;">Select an action to get started</p>
+  </div>
+
+  <!-- Action Cards -->
+  <div style="display: grid; gap: 16px; max-width: 800px; margin: 0 auto;">
+    <!-- Register New Patient -->
+    <ion-card (click)="patientRecords()" style="cursor: pointer; margin: 0;">
+      <ion-card-content style="text-align: center; padding: 24px;">
+        <ion-icon name="add"
+          style="display: block; font-size: 48px; color: var(--ion-color-primary); margin: 0 auto 12px;"></ion-icon>
+        <h3 style="margin: 0 0 8px 0; color: var(--ion-text-color); font-size: 1.5rem;">Register New Patient</h3>
+        <p style="margin: 0; color: var(--ion-color-medium); font-size: 1.1rem;">Add a new patient to the system</p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- View Existing Patients -->
+    <ion-card (click)="viewPatients()" style="cursor: pointer; margin: 0;">
+      <ion-card-content style="text-align: center; padding: 24px;">
+        <ion-icon name="people"
+          style="display: block; font-size: 48px; color: var(--ion-color-primary); margin: 0 auto 12px;"></ion-icon>
+        <h3 style="margin: 0 0 8px 0; color: var(--ion-text-color); font-size: 1.5rem;">View Patients</h3>
+        <p style="margin: 0; color: var(--ion-color-medium); font-size: 1.1rem;">Browse and manage existing patients
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Add New Visit/Transaction -->
+    <ion-card (click)="addVisit()" style="cursor: pointer; margin: 0;">
+      <ion-card-content style="text-align: center; padding: 24px;">
+        <ion-icon name="calendar"
+          style="display: block; font-size: 48px; color: var(--ion-color-primary); margin: 0 auto 12px;"></ion-icon>
+        <h3 style="margin: 0 0 8px 0; color: var(--ion-text-color); font-size: 1.5rem;">Add Visit Record</h3>
+        <p style="margin: 0; color: var(--ion-color-medium); font-size: 1.1rem;">Record new treatment and payment</p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Backup -->
+    <ion-card (click)="backup()" style="cursor: pointer; margin: 0;">
+      <ion-card-content style="text-align: center; padding: 24px;">
+        <ion-icon name="save"
+          style="display: block; font-size: 48px; color: var(--ion-color-primary); margin: 0 auto 12px;"></ion-icon>
+        <h3 style="margin: 0 0 8px 0; color: var(--ion-text-color); font-size: 1.5rem;">Backup Data</h3>
+        <p style="margin: 0; color: var(--ion-color-medium); font-size: 1.1rem;">Create a backup of patient records
+        </p>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

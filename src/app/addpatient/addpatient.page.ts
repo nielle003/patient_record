@@ -15,7 +15,12 @@ import {
   IonSelect,
   IonSelectOption,
   IonBackButton,
-  IonButtons
+  IonButtons,
+  IonIcon,
+  IonCard,
+  IonCardContent,
+  IonCardTitle,
+  IonCardHeader
 } from '@ionic/angular/standalone';
 import { PatientService, Patient } from '../services/patient';
 
@@ -40,7 +45,12 @@ import { PatientService, Patient } from '../services/patient';
     IonSelect,
     IonSelectOption,
     IonBackButton,
-    IonButtons
+    IonButtons,
+    IonIcon,
+    IonCard,
+    IonCardContent,
+    IonCardTitle,
+    IonCardHeader
   ]
 })
 export class AddpatientPage implements OnInit {

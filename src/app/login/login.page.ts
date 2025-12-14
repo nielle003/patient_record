@@ -11,7 +11,10 @@ import {
   IonLabel,
   IonInput,
   IonButton,
-  IonText
+  IonText,
+  IonIcon,
+  IonCardContent,
+  IonCard
 } from '@ionic/angular/standalone'
 import { UserService } from '../services/user'
 
@@ -32,7 +35,10 @@ import { UserService } from '../services/user'
     IonLabel,
     IonInput,
     IonButton,
-    IonText
+    IonText,
+    IonIcon,
+    IonCardContent,
+    IonCard
   ]
 })
 export class LoginComponent {

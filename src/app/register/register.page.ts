@@ -11,7 +11,12 @@ import {
   IonLabel,
   IonInput,
   IonButton,
-  IonText
+  IonText,
+  IonButtons,
+  IonIcon,
+  IonBackButton,
+  IonCard,
+  IonCardContent
 } from '@ionic/angular/standalone';
 import { UserService } from '../services/user';
 
@@ -32,7 +37,12 @@ import { UserService } from '../services/user';
     IonLabel,
     IonInput,
     IonButton,
-    IonText
+    IonText,
+    IonButtons,
+    IonIcon,
+    IonBackButton,
+    IonCard,
+    IonCardContent
   ]
 })
 export class RegisterPage implements OnInit {

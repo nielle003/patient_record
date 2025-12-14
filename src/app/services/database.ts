@@ -117,4 +117,22 @@ export class DatabaseService {
     }
     return await this.db.query(query, values)
   }
+
+  async close() {
+    if (this.db) {
+      try {
+        await this.db.close()
+        await this.sqlite.closeConnection(this.DB_NAME, false)
+        this.db = null
+        this.initialized = false
+        console.log('Database closed successfully')
+      } catch (error) {
+        console.error('Error closing database:', error)
+      }
+    }
+  }
+
+  async isOpen(): Promise<boolean> {
+    return this.initialized && this.db !== null
+  }
 }

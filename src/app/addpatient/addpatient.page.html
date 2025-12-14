@@ -8,83 +8,162 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <form>
-    <ion-item>
-      <ion-label position="stacked">First Name *</ion-label>
-      <ion-input [(ngModel)]="patient.firstName" name="firstName" type="text"></ion-input>
-    </ion-item>
+  <div style="max-width: 800px; margin: 0 auto;">
+    <form>
+      <!-- Patient Information Section -->
+      <ion-card style="margin-top: 0;">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="person" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
+            Personal Information
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item lines="none">
+            <ion-label position="stacked">First Name *</ion-label>
+            <ion-input [(ngModel)]="patient.firstName" name="firstName" type="text"
+              placeholder="Enter first name"></ion-input>
+          </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Last Name *</ion-label>
-      <ion-input [(ngModel)]="patient.lastName" name="lastName" type="text"></ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Last Name *</ion-label>
+            <ion-input [(ngModel)]="patient.lastName" name="lastName" type="text"
+              placeholder="Enter last name"></ion-input>
+          </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Gender *</ion-label>
-      <ion-select [(ngModel)]="patient.gender" name="gender">
-        <ion-select-option value="Male">Male</ion-select-option>
-        <ion-select-option value="Female">Female</ion-select-option>
-        <ion-select-option value="Other">Other</ion-select-option>
-      </ion-select>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Gender *</ion-label>
+            <ion-select [(ngModel)]="patient.gender" name="gender" placeholder="Select gender" interface="action-sheet">
+              <ion-select-option value="Male">
+                <ion-icon name="male" slot="start"></ion-icon>
+                Male
+              </ion-select-option>
+              <ion-select-option value="Female">
+                <ion-icon name="female" slot="start"></ion-icon>
+                Female
+              </ion-select-option>
+              <ion-select-option value="Other">
+                <ion-icon name="male-female" slot="start"></ion-icon>
+                Other
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Birthday *</ion-label>
-      <ion-input [(ngModel)]="patient.birthday" name="birthday" type="date"></ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Birthday *</ion-label>
+            <ion-input [(ngModel)]="patient.birthday" name="birthday" type="date"></ion-input>
+          </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Contact Number *</ion-label>
-      <ion-input [(ngModel)]="patient.contactNumber" name="contactNumber" type="tel"
-        placeholder="09XXXXXXXXX"></ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Contact Number *</ion-label>
+            <ion-input [(ngModel)]="patient.contactNumber" name="contactNumber" type="tel"
+              placeholder="09XXXXXXXXX"></ion-input>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
 
-    <ion-item>
-      <ion-label position="stacked">Occupation</ion-label>
-      <ion-input [(ngModel)]="patient.occupation" name="occupation" type="text"></ion-input>
-    </ion-item>
+      <!-- Employment Information Section -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="briefcase" style="vertical-align: middle; margin-right: 8px;"></ion-icon>
+            Employment Information
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item lines="none">
+            <ion-label position="stacked">Occupation</ion-label>
+            <ion-input [(ngModel)]="patient.occupation" name="occupation" type="text"
+              placeholder="Enter occupation"></ion-input>
+          </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Company</ion-label>
-      <ion-input [(ngModel)]="patient.company" name="company" type="text"></ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Company</ion-label>
+            <ion-input [(ngModel)]="patient.company" name="company" type="text"
+              placeholder="Enter company name"></ion-input>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
 
-    <ion-item>
-      <ion-label position="stacked">HMO</ion-label>
-      <ion-input [(ngModel)]="patient.hmo" name="hmo" type="text"></ion-input>
-    </ion-item>
+      <!-- Insurance Information Section -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="shield-checkmark" style="vertical-align: middle; margin-right: 6px;"></ion-icon>
+            Insurance & Identification
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item lines="none">
+            <ion-label position="stacked">HMO Provider</ion-label>
+            <ion-input [(ngModel)]="patient.hmo" name="hmo" type="text" placeholder="Enter HMO provider"></ion-input>
+          </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">HMO Number</ion-label>
-      <ion-input [(ngModel)]="patient.hmoNumber" name="hmoNumber" type="text"></ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">HMO Number</ion-label>
+            <ion-input [(ngModel)]="patient.hmoNumber" name="hmoNumber" type="text"
+              placeholder="Enter HMO number"></ion-input>
+          </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Valid ID Type</ion-label>
-      <ion-select [(ngModel)]="patient.validId" name="validId">
-        <ion-select-option value="Driver's License">Driver's License</ion-select-option>
-        <ion-select-option value="Passport">Passport</ion-select-option>
-        <ion-select-option value="National ID">National ID</ion-select-option>
-        <ion-select-option value="SSS ID">SSS ID</ion-select-option>
-        <ion-select-option value="PhilHealth ID">PhilHealth ID</ion-select-option>
-        <ion-select-option value="Other">Other</ion-select-option>
-      </ion-select>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Valid ID Type</ion-label>
+            <ion-select [(ngModel)]="patient.validId" name="validId" placeholder="Select ID type"
+              interface="action-sheet">
+              <ion-select-option value="Driver's License">
+                <ion-icon name="car" slot="start"></ion-icon>
+                Driver's License
+              </ion-select-option>
+              <ion-select-option value="Passport">
+                <ion-icon name="airplane" slot="start"></ion-icon>
+                Passport
+              </ion-select-option>
+              <ion-select-option value="National ID">
+                <ion-icon name="card" slot="start"></ion-icon>
+                National ID
+              </ion-select-option>
+              <ion-select-option value="SSS ID">
+                <ion-icon name="id-card" slot="start"></ion-icon>
+                SSS ID
+              </ion-select-option>
+              <ion-select-option value="PhilHealth ID">
+                <ion-icon name="fitness" slot="start"></ion-icon>
+                PhilHealth ID
+              </ion-select-option>
+              <ion-select-option value="Other">
+                <ion-icon name="document" slot="start"></ion-icon>
+                Other
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">ID Number</ion-label>
-      <ion-input [(ngModel)]="patient.idNumber" name="idNumber" type="text"></ion-input>
-    </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">ID Number</ion-label>
+            <ion-input [(ngModel)]="patient.idNumber" name="idNumber" type="text"
+              placeholder="Enter ID number"></ion-input>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
 
-    <ion-button expand="full" (click)="addPatient()">{{ isEditMode ? 'Update Patient' : 'Add Patient' }}</ion-button>
-    <ion-button expand="full" fill="outline" (click)="resetForm()" *ngIf="!isEditMode">Reset Form</ion-button>
+      <!-- Action Buttons -->
+      <div style="padding: 0 16px; margin-top: 24px;">
+        <ion-text color="danger" *ngIf="error">
+          <p style="text-align: center;">{{error}}</p>
+        </ion-text>
 
-    <ion-text color="danger" *ngIf="error">
-      <p>{{error}}</p>
-    </ion-text>
+        <ion-text color="success" *ngIf="success">
+          <p style="text-align: center;">{{success}}</p>
+        </ion-text>
 
-    <ion-text color="success" *ngIf="success">
-      <p>{{success}}</p>
-    </ion-text>
-  </form>
+        <ion-button expand="block" (click)="addPatient()" color="primary">
+          <ion-icon slot="start" [name]="isEditMode ? 'checkmark-circle' : 'add-circle'"></ion-icon>
+          {{ isEditMode ? 'Update Patient' : 'Add Patient' }}
+        </ion-button>
+
+        <ion-button expand="block" fill="outline" (click)="resetForm()" *ngIf="!isEditMode" color="medium">
+          <ion-icon slot="start" name="refresh"></ion-icon>
+          Reset Form
+        </ion-button>
+      </div>
+    </form>
+  </div>
 </ion-content>

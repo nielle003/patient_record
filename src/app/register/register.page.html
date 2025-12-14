@@ -1,34 +1,69 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Register</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Create Account</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-item>
-    <ion-label position="stacked">Username</ion-label>
-    <ion-input [(ngModel)]="username" type="text"></ion-input>
-  </ion-item>
+  <div style="max-width: 400px; margin: 0 auto; padding-top: 40px;">
 
-  <ion-item>
-    <ion-label position="stacked">Password</ion-label>
-    <ion-input [(ngModel)]="password" type="password"></ion-input>
-  </ion-item>
 
-  <ion-item>
-    <ion-label position="stacked">Confirm Password</ion-label>
-    <ion-input [(ngModel)]="confirmPassword" type="password"></ion-input>
-  </ion-item>
+    <!-- Registration Form -->
+    <ion-card style="margin: 0; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);">
+      <div style="text-align: center; margin-bottom: 40px;">
+        <ion-icon name="person-add" style="font-size: 64px; color: var(--ion-color-primary);"></ion-icon>
+        <h1 style="margin-top: 16px; color: var(--ion-color-primary);">Create Account</h1>
+        <p style="color: var(--ion-color-medium); margin-top: 8px;">Register to access the patient record system</p>
+      </div>
+      <ion-card-content style="padding: 32px 24px;">
+        <ion-item lines="none"
+          style="border: 1px solid var(--ion-color-medium); border-radius: 8px; margin-bottom: 16px;">
+          <ion-label position="stacked">Username</ion-label>
+          <ion-input [(ngModel)]="username" type="text" placeholder="Choose a username"></ion-input>
+        </ion-item>
 
-  <ion-button expand="full" (click)="register()">Register</ion-button>
+        <ion-item lines="none"
+          style="border: 1px solid var(--ion-color-medium); border-radius: 8px; margin-bottom: 16px;">
+          <ion-label position="stacked">Password</ion-label>
+          <ion-input [(ngModel)]="password" type="password" placeholder="Enter your password"></ion-input>
+        </ion-item>
 
-  <ion-text color="danger" *ngIf="error">
-    <p>{{error}}</p>
-  </ion-text>
+        <ion-item lines="none"
+          style="border: 1px solid var(--ion-color-medium); border-radius: 8px; margin-bottom: 16px;">
+          <ion-label position="stacked">Confirm Password</ion-label>
+          <ion-input [(ngModel)]="confirmPassword" type="password" placeholder="Confirm your password"></ion-input>
+        </ion-item>
 
-  <ion-text color="success" *ngIf="success">
-    <p>{{success}}</p>
-  </ion-text>
+        <ion-text color="danger" *ngIf="error">
+          <p style="margin: 16px 0; text-align: center;">{{error}}</p>
+        </ion-text>
 
-  <ion-button expand="full" fill="clear" routerLink="/login">Already have an account? Login</ion-button>
+        <ion-text color="success" *ngIf="success">
+          <p style="margin: 16px 0; text-align: center;">{{success}}</p>
+        </ion-text>
+
+        <ion-button expand="block" (click)="register()" style="margin-top: 24px;">
+          <span style="display: flex; align-items: center; justify-content: center; width: 100%;">
+            <ion-icon slot="start" name="checkmark-circle" style="margin-right: 8px;"></ion-icon>
+            Create Account
+          </span>
+        </ion-button>
+
+        <div style="text-align: center; margin-top: 24px;">
+          <ion-text color="medium">
+            <p style="margin-bottom: 8px;">Already have an account?</p>
+          </ion-text>
+          <ion-button expand="block" fill="outline" routerLink="/login">
+            <span style="display: flex; align-items: center; justify-content: center; width: 100%;">
+              <ion-icon slot="start" name="log-in" style="margin-right: 8px;"></ion-icon>
+              Sign In
+            </span>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>
