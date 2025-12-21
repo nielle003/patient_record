@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">I Love my Dentist</string>
-    <string name="title_activity_main">I Love my Dentist</string>
+    <string name="app_name">I❤️myDentist</string>
+    <string name="title_activity_main">I❤️myDentist</string>
     <string name="package_name">io.ionic.starter</string>
     <string name="custom_url_scheme">io.ionic.starter</string>
 </resources>
