@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonHeader, IonToolbar, IonCard, IonCardContent, IonTitle, IonIcon, IonContent, IonList, IonItem, IonLabel, IonText, IonButton } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonCard, IonCardContent, IonTitle, IonIcon, IonContent } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import { add, people, calendar, save } from 'ionicons/icons';
@@ -10,7 +10,7 @@ import { add, people, calendar, save } from 'ionicons/icons';
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonCard, IonCardContent, IonIcon, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonText, IonButton],
+  imports: [CommonModule, IonCard, IonCardContent, IonIcon, IonHeader, IonToolbar, IonTitle, IonContent],
 })
 export class HomePage {
   constructor(private router: Router) {
