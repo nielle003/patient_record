@@ -66,17 +66,17 @@ import { PaymentService, Payment } from '../services/payment';
 })
 export class ViewpatientPage implements OnInit {
   Math = Math  // For use in template
-  patients: Patient[] = []
-  filteredPatients: Patient[] = []
   paginatedPatients: Patient[] = []
   selectedPatient: Patient | null = null
   visits: Visit[] = []
   searchTerm = ''
+  isSearching = false
 
   // Pagination properties
-  currentPage: number = 1
+  currentPage: number = 0  // 0-indexed for database queries
   itemsPerPage: number = 10
   totalPages: number = 1
+  totalCount: number = 0
 
   selectedVisit: Visit | null = null
   payments: Payment[] = []
@@ -132,29 +132,61 @@ export class ViewpatientPage implements OnInit {
   }
 
   async loadPatients() {
-    this.patients = await this.patientService.getAllPatients()
-    this.filteredPatients = this.patients
-    this.currentPage = 1
-    this.updatePagination()
-    console.log('Loaded patients:', this.patients)
+    try {
+      // Load first page from database
+      this.currentPage = 0
+      this.totalCount = await this.patientService.getPatientsCount()
+      this.totalPages = Math.ceil(this.totalCount / this.itemsPerPage)
+      await this.loadCurrentPage()
+      console.log(`Loaded page 1 of ${this.totalPages} (${this.totalCount} total patients)`)
+    } catch (error) {
+      console.error('Error loading patients:', error)
+      alert('Failed to load patients')
+    }
   }
 
-  handleSearch(event: any) {
-    const query = event.target.value.toLowerCase()
-    this.searchTerm = query
-
-    if (query.trim() === '') {
-      this.filteredPatients = this.patients
+  async loadCurrentPage() {
+    if (this.searchTerm.trim()) {
+      // Load search results
+      this.paginatedPatients = await this.patientService.searchPatientsPaginated(
+        this.searchTerm,
+        this.currentPage,
+        this.itemsPerPage
+      )
     } else {
-      this.filteredPatients = this.patients.filter(patient =>
-        patient.firstName.toLowerCase().includes(query) ||
-        patient.lastName.toLowerCase().includes(query) ||
-        (patient.hmoNumber && patient.hmoNumber.toLowerCase().includes(query))
+      // Load regular page
+      this.paginatedPatients = await this.patientService.getPatientsPaginated(
+        this.currentPage,
+        this.itemsPerPage
       )
     }
+  }
 
-    this.currentPage = 1
-    this.updatePagination()
+  async handleSearch(event: any) {
+    const query = event.target.value.trim()
+    this.searchTerm = query
+    this.currentPage = 0
+
+    try {
+      this.isSearching = true
+
+      if (query === '') {
+        // Load all patients paginated
+        this.totalCount = await this.patientService.getPatientsCount()
+      } else {
+        // Search database
+        this.totalCount = await this.patientService.getSearchResultsCount(query)
+      }
+
+      this.totalPages = Math.ceil(this.totalCount / this.itemsPerPage)
+      await this.loadCurrentPage()
+      
+      console.log(`Search "${query}" found ${this.totalCount} results`)
+    } catch (error) {
+      console.error('Search error:', error)
+    } finally {
+      this.isSearching = false
+    }
   }
 
   async selectPatient(patient: Patient) {
@@ -167,39 +199,40 @@ export class ViewpatientPage implements OnInit {
 
   backToList() {
     this.selectedPatient = null
-    this.visits = []
+    this.visits = []  // Clear visits to free memory
+    this.selectedVisit = null
+    this.payments = []  // Clear payments to free memory
   }
 
-  updatePagination() {
-    this.totalPages = Math.ceil(this.filteredPatients.length / this.itemsPerPage)
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage
-    const endIndex = startIndex + this.itemsPerPage
-    this.paginatedPatients = this.filteredPatients.slice(startIndex, endIndex)
-  }
-
-  nextPage() {
-    if (this.currentPage < this.totalPages) {
+  async nextPage() {
+    if (this.currentPage < this.totalPages - 1) {
       this.currentPage++
-      this.updatePagination()
+      await this.loadCurrentPage()
     }
   }
 
-  previousPage() {
-    if (this.currentPage > 1) {
+  async previousPage() {
+    if (this.currentPage > 0) {
       this.currentPage--
-      this.updatePagination()
+      await this.loadCurrentPage()
     }
   }
 
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page
-      this.updatePagination()
+  async goToPage(page: number) {
+    // page is 1-indexed from UI, convert to 0-indexed
+    const pageIndex = page - 1
+    if (pageIndex >= 0 && pageIndex < this.totalPages) {
+      this.currentPage = pageIndex
+      await this.loadCurrentPage()
     }
   }
 
   get pageNumbers(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1)
+  }
+
+  get displayPage(): number {
+    return this.currentPage + 1  // Convert 0-indexed to 1-indexed for display
   }
 
   editPatient(patient: Patient) {

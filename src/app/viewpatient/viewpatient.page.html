@@ -20,11 +20,10 @@
     </ion-searchbar>
 
     <!-- Pagination Info -->
-    <div *ngIf="filteredPatients.length > 0"
-      style="text-align: center; margin: 12px 0; color: var(--ion-color-medium);">
+    <div *ngIf="totalCount > 0" style="text-align: center; margin: 12px 0; color: var(--ion-color-medium);">
       <p style="font-size: 0.9rem; margin: 0;">
-        Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} - {{ Math.min(currentPage * itemsPerPage,
-        filteredPatients.length) }} of {{ filteredPatients.length }} patients
+        Showing {{ (currentPage * itemsPerPage) + 1 }} - {{ Math.min((currentPage + 1) * itemsPerPage, totalCount) }} of
+        {{ totalCount }} patients
       </p>
     </div>
 
@@ -74,27 +73,28 @@
     <!-- Pagination Controls -->
     <div *ngIf="totalPages > 1"
       style="display: flex; justify-content: center; align-items: center; gap: 8px; margin: 24px 16px; flex-wrap: wrap;">
-      <ion-button fill="outline" size="small" (click)="previousPage()" [disabled]="currentPage === 1">
+      <ion-button fill="outline" size="small" (click)="previousPage()" [disabled]="currentPage === 0">
         <ion-icon slot="icon-only" name="chevron-back"></ion-icon>
       </ion-button>
 
       <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-        <ion-button *ngFor="let page of pageNumbers" [fill]="currentPage === page ? 'solid' : 'outline'" size="small"
-          (click)="goToPage(page)" [color]="currentPage === page ? 'primary' : 'medium'" style="min-width: 40px;">
+        <ion-button *ngFor="let page of pageNumbers" [fill]="displayPage === page ? 'solid' : 'outline'" size="small"
+          (click)="goToPage(page)" [color]="displayPage === page ? 'primary' : 'medium'" style="min-width: 40px;">
           {{ page }}
         </ion-button>
       </div>
 
-      <ion-button fill="outline" size="small" (click)="nextPage()" [disabled]="currentPage === totalPages">
+      <ion-button fill="outline" size="small" (click)="nextPage()" [disabled]="currentPage === totalPages - 1">
         <ion-icon slot="icon-only" name="chevron-forward"></ion-icon>
       </ion-button>
     </div>
 
-    <ion-text *ngIf="filteredPatients.length === 0" class="ion-text-center">
+    <ion-text *ngIf="totalCount === 0" class="ion-text-center">
       <div style="text-align: center; padding: 60px 20px;">
         <ion-icon name="people-outline"
           style="font-size: 80px; color: var(--ion-color-medium); opacity: 0.5;"></ion-icon>
-        <p style="color: var(--ion-color-medium); margin-top: 16px; font-size: 1.1rem;">No patients found</p>
+        <p style="color: var(--ion-color-medium); margin-top: 16px; font-size: 1.1rem;">{{ searchTerm ? 'No patients
+          found matching "' + searchTerm + '"' : 'No patients found' }}</p>
       </div>
     </ion-text>
   </div>

@@ -147,4 +147,54 @@ export class PatientService {
         )
         return res.values ?? []
     }
+
+    // Get paginated patients (for efficient loading)
+    async getPatientsPaginated(page: number, pageSize: number): Promise<Patient[]> {
+        await this.init()
+        const offset = page * pageSize
+        const res: any = await this.db.query(
+            `SELECT * FROM patients 
+             ORDER BY lastName, firstName
+             LIMIT ? OFFSET ?`,
+            [pageSize, offset]
+        )
+        return res.values ?? []
+    }
+
+    // Get total count of patients
+    async getPatientsCount(): Promise<number> {
+        await this.init()
+        const res: any = await this.db.query(
+            'SELECT COUNT(*) as count FROM patients',
+            []
+        )
+        return res.values?.[0]?.count ?? 0
+    }
+
+    // Search patients with pagination
+    async searchPatientsPaginated(searchTerm: string, page: number, pageSize: number): Promise<Patient[]> {
+        await this.init()
+        const term = `%${searchTerm}%`
+        const offset = page * pageSize
+        const res: any = await this.db.query(
+            `SELECT * FROM patients 
+             WHERE firstName LIKE ? OR lastName LIKE ? OR hmoNumber LIKE ?
+             ORDER BY lastName, firstName
+             LIMIT ? OFFSET ?`,
+            [term, term, term, pageSize, offset]
+        )
+        return res.values ?? []
+    }
+
+    // Get search results count
+    async getSearchResultsCount(searchTerm: string): Promise<number> {
+        await this.init()
+        const term = `%${searchTerm}%`
+        const res: any = await this.db.query(
+            `SELECT COUNT(*) as count FROM patients 
+             WHERE firstName LIKE ? OR lastName LIKE ? OR hmoNumber LIKE ?`,
+            [term, term, term]
+        )
+        return res.values?.[0]?.count ?? 0
+    }
 }
