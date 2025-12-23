@@ -253,6 +253,7 @@ export class ViewpatientPage implements OnInit {
     this.selectedVisit = null
     this.payments = []
     this.showPaymentForm = false
+    this.router.navigate(['/viewpatient'])
   }
 
   openPaymentForm(visit: Visit) {
@@ -305,6 +306,9 @@ export class ViewpatientPage implements OnInit {
 
   cancelPayment() {
     this.showPaymentForm = false
+    if (!this.showEditPaymentForm) {
+      this.router.navigate(['/viewpatient'])
+    }
   }
 
   openEditVisit(visit: Visit) {

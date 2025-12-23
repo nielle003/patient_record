@@ -9,6 +9,8 @@ import { App } from '@capacitor/app';
   imports: [IonApp, IonRouterOutlet],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private appStateListener?: any;
+
   constructor(
     private platform: Platform,
     private databaseService: DatabaseService
@@ -16,30 +18,37 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     await this.platform.ready();
+    await this.databaseService.init();
     await this.setupAppLifecycle();
   }
 
   private async setupAppLifecycle() {
-    // Handle app state changes
-    App.addListener('pause', async () => {
-      console.log('App paused - closing database');
-      await this.databaseService.close();
-    });
-
-    App.addListener('resume', async () => {
-      console.log('App resumed - reopening database');
-      await this.databaseService.init();
-    });
-
-    // Handle app termination
-    App.addListener('appStateChange', async (state) => {
+    // Monitor app state changes for cleanup opportunities
+    // Don't close database on pause - keep it open for better UX
+    this.appStateListener = await App.addListener('appStateChange', async (state) => {
       if (!state.isActive) {
-        await this.databaseService.close();
+        console.log('App backgrounded - database remains open');
+        // Database stays open for faster resume
+        // WAL mode prevents corruption even if app is killed
+      } else {
+        console.log('App foregrounded');
+        // Verify database is still healthy
+        const isOpen = await this.databaseService.isOpen();
+        if (!isOpen) {
+          console.log('Database was closed, reinitializing...');
+          await this.databaseService.init();
+        }
       }
     });
   }
 
   async ngOnDestroy() {
+    // Clean up listener
+    if (this.appStateListener) {
+      await this.appStateListener.remove();
+    }
+    
+    // Close database on app destruction
     await this.databaseService.close();
   }
 }

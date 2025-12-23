@@ -111,6 +111,19 @@ export class DatabaseService {
         createdAt INTEGER,
         FOREIGN KEY (visitId) REFERENCES visits(id)
       );
+
+      -- Indexes for faster queries
+      -- Speed up patient search by name
+      CREATE INDEX IF NOT EXISTS idx_patients_name ON patients(lastName, firstName);
+      
+      -- Speed up loading visits for a patient
+      CREATE INDEX IF NOT EXISTS idx_visits_patientId ON visits(patientId);
+      
+      -- Speed up loading payments for a visit
+      CREATE INDEX IF NOT EXISTS idx_payments_visitId ON payments(visitId);
+      
+      -- Speed up visit date searches
+      CREATE INDEX IF NOT EXISTS idx_visits_date ON visits(dateOfVisit);
     `)
 
     await this.db.run(
