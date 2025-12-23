@@ -227,33 +227,6 @@ export class DatabaseService {
     }
   }
 
-  /**
-   * Execute multiple database operations as a single atomic transaction
-   * Either ALL operations succeed or ALL are rolled back
-   * Prevents partial updates and data inconsistency
-   * 
-   * Note: This doesn't use BEGIN/COMMIT as Capacitor SQLite handles transactions internally
-   * 
-   * @param callback Function containing database operations to execute
-   * @returns Result from the callback function
-   * @throws Error if transaction fails
-   */
-  async runTransaction<T>(callback: () => Promise<T>): Promise<T> {
-    if (!this.db) {
-      throw new Error('Database not initialized')
-    }
-
-    try {
-      console.log('🔄 Executing transaction')
-      const result = await callback()
-      console.log('✅ Transaction completed successfully')
-      return result
-    } catch (error) {
-      console.error('❌ Transaction failed:', error)
-      throw error
-    }
-  }
-
   async close() {
     if (this.db) {
       try {

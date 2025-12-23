@@ -98,15 +98,13 @@ export class VisitService {
     async deleteVisit(id: number): Promise<boolean> {
         await this.init()
 
-        // Use transaction to delete visit and its payments together
-        return await this.db.runTransaction(async () => {
-            // First delete all payments for this visit
-            await this.db.run('DELETE FROM payments WHERE visitId = ?', [id])
-
-            // Then delete the visit itself
-            const res: any = await this.db.run('DELETE FROM visits WHERE id = ?', [id])
-            return (res.changes?.changes ?? 0) > 0
-        })
+        // Use executeSet transaction to delete visit and its payments together atomically
+        const result = await this.db.runTransactionSet([
+            { statement: 'DELETE FROM payments WHERE visitId = ?', values: [id] },
+            { statement: 'DELETE FROM visits WHERE id = ?', values: [id] }
+        ])
+        
+        return (result?.changes?.changes ?? 0) > 0
     }
 
     // Add visit with initial payment in a single transaction

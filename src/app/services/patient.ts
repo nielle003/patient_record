@@ -111,29 +111,43 @@ export class PatientService {
     async deletePatient(id: number): Promise<boolean> {
         await this.init()
 
-        // Use transaction to ensure all deletes happen together
+        // Use executeSet transaction to ensure all deletes happen together atomically
         // If any step fails, ALL are rolled back
-        return await this.db.runTransaction(async () => {
-            // Delete in order: payments -> visits -> patient
-            // First delete all payments associated with this patient's visits
-            const visitsRes: any = await this.db.query(
-                'SELECT id FROM visits WHERE patientId = ?',
-                [id]
-            )
+        
+        // First get all visit IDs for this patient
+        const visitsRes: any = await this.db.query(
+            'SELECT id FROM visits WHERE patientId = ?',
+            [id]
+        )
 
-            if (visitsRes.values && visitsRes.values.length > 0) {
-                for (const visit of visitsRes.values) {
-                    await this.db.run('DELETE FROM payments WHERE visitId = ?', [visit.id])
-                }
+        // Build statements array for the transaction
+        const statements: Array<{ statement: string, values: any[] }> = []
+
+        // Delete all payments for each visit
+        if (visitsRes.values && visitsRes.values.length > 0) {
+            for (const visit of visitsRes.values) {
+                statements.push({
+                    statement: 'DELETE FROM payments WHERE visitId = ?',
+                    values: [visit.id]
+                })
             }
+        }
 
-            // Then delete all visits
-            await this.db.run('DELETE FROM visits WHERE patientId = ?', [id])
-
-            // Finally delete the patient
-            const res: any = await this.db.run('DELETE FROM patients WHERE id = ?', [id])
-            return (res.changes?.changes ?? 0) > 0
+        // Delete all visits for this patient
+        statements.push({
+            statement: 'DELETE FROM visits WHERE patientId = ?',
+            values: [id]
         })
+
+        // Delete the patient
+        statements.push({
+            statement: 'DELETE FROM patients WHERE id = ?',
+            values: [id]
+        })
+
+        // Execute all deletes in a single transaction
+        const result = await this.db.runTransactionSet(statements)
+        return (result?.changes?.changes ?? 0) > 0
     }
 
     async searchPatients(searchTerm: string): Promise<Patient[]> {

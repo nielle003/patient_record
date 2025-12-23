@@ -33,33 +33,31 @@ export class PaymentService {
         const ts = Date.now()
         console.log('Adding payment:', payment)
 
-        // Use transaction to ensure payment insert and balance update happen together
-        return await this.db.runTransaction(async () => {
-            const res: any = await this.db.run(
-                `INSERT INTO payments (
-                    visitId, firstName, lastName, amount, paymentDate, paymentMethod, notes, createdAt
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    payment.visitId,
-                    payment.firstName,
-                    payment.lastName,
-                    payment.amount,
-                    payment.paymentDate,
-                    payment.paymentMethod,
-                    payment.notes || '',
-                    ts
-                ]
-            )
+        // Insert payment
+        const res: any = await this.db.run(
+            `INSERT INTO payments (
+                visitId, firstName, lastName, amount, paymentDate, paymentMethod, notes, createdAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                payment.visitId,
+                payment.firstName,
+                payment.lastName,
+                payment.amount,
+                payment.paymentDate,
+                payment.paymentMethod,
+                payment.notes || '',
+                ts
+            ]
+        )
 
-            const paymentId = res.changes?.lastId ?? -1
+        const paymentId = res.changes?.lastId ?? -1
 
-            // Update the visit's totalPaid and balance
-            if (paymentId > 0) {
-                await this.updateVisitBalance(payment.visitId)
-            }
+        // Update the visit's totalPaid and balance
+        if (paymentId > 0) {
+            await this.updateVisitBalance(payment.visitId)
+        }
 
-            return paymentId
-        })
+        return paymentId
     }
 
     // Add payment without transaction wrapper (for use within existing transactions)
@@ -117,49 +115,45 @@ export class PaymentService {
     async updatePayment(payment: Payment): Promise<boolean> {
         await this.init()
 
-        // Use transaction to ensure payment update and balance recalculation happen together
-        return await this.db.runTransaction(async () => {
-            const res: any = await this.db.run(
-                `UPDATE payments SET 
-                    firstName = ?, lastName = ?, amount = ?, paymentDate = ?, paymentMethod = ?, notes = ?
-                WHERE id = ?`,
-                [
-                    payment.firstName,
-                    payment.lastName,
-                    payment.amount,
-                    payment.paymentDate,
-                    payment.paymentMethod,
-                    payment.notes,
-                    payment.id
-                ]
-            )
+        // Update payment
+        const res: any = await this.db.run(
+            `UPDATE payments SET 
+                firstName = ?, lastName = ?, amount = ?, paymentDate = ?, paymentMethod = ?, notes = ?
+            WHERE id = ?`,
+            [
+                payment.firstName,
+                payment.lastName,
+                payment.amount,
+                payment.paymentDate,
+                payment.paymentMethod,
+                payment.notes,
+                payment.id
+            ]
+        )
 
-            const success = (res.changes?.changes ?? 0) > 0
+        const success = (res.changes?.changes ?? 0) > 0
 
-            // Update the visit's totalPaid and balance
-            if (success && payment.visitId) {
-                await this.updateVisitBalance(payment.visitId)
-            }
+        // Update the visit's totalPaid and balance
+        if (success && payment.visitId) {
+            await this.updateVisitBalance(payment.visitId)
+        }
 
-            return success
-        })
+        return success
     }
 
     async deletePayment(id: number, visitId: number): Promise<boolean> {
         await this.init()
 
-        // Use transaction to ensure payment delete and balance update happen together
-        return await this.db.runTransaction(async () => {
-            const res: any = await this.db.run('DELETE FROM payments WHERE id = ?', [id])
-            const success = (res.changes?.changes ?? 0) > 0
+        // Delete payment
+        const res: any = await this.db.run('DELETE FROM payments WHERE id = ?', [id])
+        const success = (res.changes?.changes ?? 0) > 0
 
-            // Update the visit's totalPaid and balance
-            if (success) {
-                await this.updateVisitBalance(visitId)
-            }
+        // Update the visit's totalPaid and balance
+        if (success) {
+            await this.updateVisitBalance(visitId)
+        }
 
-            return success
-        })
+        return success
     }
 
     private async updateVisitBalance(visitId: number): Promise<void> {
