@@ -62,6 +62,38 @@ export class PaymentService {
         })
     }
 
+    // Add payment without transaction wrapper (for use within existing transactions)
+    async addPaymentNoTransaction(payment: Payment): Promise<number> {
+        await this.init()
+        const ts = Date.now()
+        console.log('Adding payment (no transaction):', payment)
+
+        const res: any = await this.db.run(
+            `INSERT INTO payments (
+                visitId, firstName, lastName, amount, paymentDate, paymentMethod, notes, createdAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                payment.visitId,
+                payment.firstName,
+                payment.lastName,
+                payment.amount,
+                payment.paymentDate,
+                payment.paymentMethod,
+                payment.notes || '',
+                ts
+            ]
+        )
+
+        const paymentId = res.changes?.lastId ?? -1
+
+        // Update the visit's totalPaid and balance
+        if (paymentId > 0) {
+            await this.updateVisitBalance(payment.visitId)
+        }
+
+        return paymentId
+    }
+
     async getPaymentsByVisit(visitId: number): Promise<Payment[]> {
         await this.init()
         console.log('Getting payments for visit:', visitId)

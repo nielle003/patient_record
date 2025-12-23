@@ -190,20 +190,53 @@ export class DatabaseService {
   }
 
   /**
+   * Execute multiple database operations as a single atomic transaction using executeSet
+   * Either ALL operations succeed or ALL are rolled back
+   * Prevents partial updates and data inconsistency
+   * 
+   * @param statements Array of SQL statements with their values to execute
+   * @returns Result from the transaction
+   * @throws Error if transaction fails (automatically rolls back)
+   * 
+   * @example
+   * await db.runTransaction([
+   *   { statement: 'INSERT INTO visits ...', values: [data] },
+   *   { statement: 'UPDATE patients ...', values: [data] }
+   * ])
+   */
+  async runTransactionSet(statements: Array<{ statement: string, values?: any[] }>): Promise<any> {
+    if (!this.db) {
+      throw new Error('Database not initialized')
+    }
+
+    try {
+      console.log('🔄 Executing transaction with', statements.length, 'statements')
+      
+      const set = statements.map(stmt => ({
+        statement: stmt.statement,
+        values: stmt.values || []
+      }))
+
+      const result = await this.db.executeSet(set, true) // true = use transaction
+      console.log('✅ Transaction completed successfully')
+      
+      return result
+    } catch (error) {
+      console.error('❌ Transaction failed:', error)
+      throw error
+    }
+  }
+
+  /**
    * Execute multiple database operations as a single atomic transaction
    * Either ALL operations succeed or ALL are rolled back
    * Prevents partial updates and data inconsistency
    * 
+   * Note: This doesn't use BEGIN/COMMIT as Capacitor SQLite handles transactions internally
+   * 
    * @param callback Function containing database operations to execute
    * @returns Result from the callback function
-   * @throws Error if transaction fails (automatically rolls back)
-   * 
-   * @example
-   * await db.runTransaction(async () => {
-   *   await db.run('INSERT INTO visits ...', [data])
-   *   await db.run('UPDATE patients ...', [data])
-   *   // Both succeed together or both fail together
-   * })
+   * @throws Error if transaction fails
    */
   async runTransaction<T>(callback: () => Promise<T>): Promise<T> {
     if (!this.db) {
@@ -211,27 +244,11 @@ export class DatabaseService {
     }
 
     try {
-      // Begin transaction
-      await this.db.run('BEGIN TRANSACTION')
-      console.log('🔄 Transaction started')
-
-      // Execute all operations in the callback
+      console.log('🔄 Executing transaction')
       const result = await callback()
-
-      // Commit transaction - make all changes permanent
-      await this.db.run('COMMIT')
-      console.log('✅ Transaction committed successfully')
-
+      console.log('✅ Transaction completed successfully')
       return result
     } catch (error) {
-      // Rollback transaction - undo all changes
-      try {
-        await this.db.run('ROLLBACK')
-        console.log('🔙 Transaction rolled back due to error')
-      } catch (rollbackError) {
-        console.error('Failed to rollback transaction:', rollbackError)
-      }
-
       console.error('❌ Transaction failed:', error)
       throw error
     }

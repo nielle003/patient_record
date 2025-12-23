@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -62,7 +62,7 @@ import { PaymentService, Payment } from '../services/payment';
     IonCardHeader
   ]
 })
-export class AddvisitPage implements OnInit {
+export class AddvisitPage implements OnInit, OnDestroy {
   visit: Visit = {
     patientId: 0,
     firstName: '',
@@ -78,10 +78,12 @@ export class AddvisitPage implements OnInit {
 
   initialPayment: number = 0
 
-  patients: Patient[] = []
   filteredPatients: Patient[] = []
   selectedPatient: Patient | null = null
   searchTerm = ''
+  searchInProgress = false
+  searchTimeout: any = null
+  maxResults = 20  // Limit search results for performance
   error = ''
   success = ''
 
@@ -117,28 +119,46 @@ export class AddvisitPage implements OnInit {
   ) { }
 
   async ngOnInit() {
-    await this.loadPatients()
+    // No need to load all patients on init
+    // Search will be triggered as user types
   }
 
-  async loadPatients() {
-    this.patients = await this.patientService.getAllPatients()
-    this.filteredPatients = this.patients
-    console.log('Loaded patients:', this.patients)
-  }
-
-  handleSearch(event: any) {
-    const query = event.target.value.toLowerCase()
+  async handleSearch(event: any) {
+    const query = event.target.value.trim()
     this.searchTerm = query
 
-    if (query.trim() === '') {
-      this.filteredPatients = this.patients
-    } else {
-      this.filteredPatients = this.patients.filter(patient =>
-        patient.firstName.toLowerCase().includes(query) ||
-        patient.lastName.toLowerCase().includes(query) ||
-        (patient.hmoNumber && patient.hmoNumber.toLowerCase().includes(query))
-      )
+    // Clear existing timeout
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout)
     }
+
+    // Clear results if search is empty
+    if (query === '') {
+      this.filteredPatients = []
+      return
+    }
+
+    // Only search if query has at least 2 characters
+    if (query.length < 2) {
+      return
+    }
+
+    // Debounce search - wait 300ms after user stops typing
+    this.searchInProgress = true
+    this.searchTimeout = setTimeout(async () => {
+      try {
+        // Use database search with LIMIT for better performance
+        const allResults = await this.patientService.searchPatients(query)
+        // Limit results to maxResults to prevent memory issues
+        this.filteredPatients = allResults.slice(0, this.maxResults)
+        console.log(`Found ${allResults.length} patients, showing ${this.filteredPatients.length}`)
+      } catch (error) {
+        console.error('Search error:', error)
+        this.filteredPatients = []
+      } finally {
+        this.searchInProgress = false
+      }
+    }, 300)  // 300ms debounce delay
   }
 
   selectPatient(patient: Patient) {
@@ -156,7 +176,7 @@ export class AddvisitPage implements OnInit {
     this.visit.firstName = ''
     this.visit.lastName = ''
     this.searchTerm = ''
-    this.filteredPatients = this.patients
+    this.filteredPatients = []
   }
 
   calculateBalance() {
@@ -191,28 +211,29 @@ export class AddvisitPage implements OnInit {
       this.calculateBalance()
 
       console.log('Attempting to add visit:', this.visit)
-      const visitId = await this.visitService.addVisit(this.visit)
+      
+      // Prepare initial payment if provided
+      let initialPaymentData: Payment | undefined
+      if (this.initialPayment > 0) {
+        initialPaymentData = {
+          visitId: 0, // Will be set by the service
+          firstName: this.visit.firstName,
+          lastName: this.visit.lastName,
+          amount: this.initialPayment,
+          paymentDate: new Date().toISOString(),
+          paymentMethod: this.visit.modeOfPayment === 'Cash' ? 'Cash' : 'Down Payment',
+          notes: 'Initial payment'
+        }
+      }
+
+      // Add visit with payment in a single transaction
+      const visitId = await this.visitService.addVisitWithPayment(this.visit, initialPaymentData)
       console.log('Visit added with ID:', visitId)
 
       if (visitId && visitId > 0) {
-        // If there's an initial payment, record it
-        if (this.initialPayment > 0) {
-          const payment: Payment = {
-            visitId: visitId,
-            firstName: this.visit.firstName,
-            lastName: this.visit.lastName,
-            amount: this.initialPayment,
-            paymentDate: new Date().toISOString(),
-            paymentMethod: this.visit.modeOfPayment === 'Cash' ? 'Cash' : 'Down Payment',
-            notes: 'Initial payment'
-          }
-          await this.paymentService.addPayment(payment)
-        }
-
         this.success = 'Visit added successfully!'
         alert(this.success)
         this.resetForm()
-
       } else {
         this.error = 'Failed to add visit - no ID returned'
         console.error(this.error)
@@ -241,13 +262,15 @@ export class AddvisitPage implements OnInit {
     this.initialPayment = 0
     this.selectedPatient = null
     this.searchTerm = ''
-    this.filteredPatients = this.patients
+    this.filteredPatients = []
     this.error = ''
     this.success = ''
   }
 
-  getPatientName(patientId: number): string {
-    const patient = this.patients.find(p => p.id === patientId)
-    return patient ? `${patient.firstName} ${patient.lastName}` : ''
+  ngOnDestroy() {
+    // Clean up search timeout to prevent memory leaks
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout)
+    }
   }
 }

@@ -22,9 +22,33 @@
           <ion-item lines="none" *ngIf="!selectedPatient">
             <ion-label position="stacked">Search Patient *</ion-label>
             <ion-searchbar [(ngModel)]="searchTerm" (ionInput)="handleSearch($event)" name="patientSearch"
-              placeholder="Search by name or HMO number" style="padding: 0;">
+              placeholder="Search by name or HMO number" [debounce]="0" style="padding: 0;">
             </ion-searchbar>
           </ion-item>
+
+          <!-- Search hints and feedback -->
+          <p *ngIf="!selectedPatient && searchTerm.length > 0 && searchTerm.length < 2"
+            style="margin: 8px 0 0 0; color: var(--ion-color-medium); font-size: 0.875rem;">
+            <ion-icon name="information-circle"></ion-icon>
+            Type at least 2 characters to search
+          </p>
+
+          <p *ngIf="searchInProgress" style="margin: 8px 0 0 0; color: var(--ion-color-primary); font-size: 0.875rem;">
+            <ion-icon name="hourglass"></ion-icon>
+            Searching...
+          </p>
+
+          <p *ngIf="!searchInProgress && searchTerm.length >= 2 && filteredPatients.length === 0 && !selectedPatient"
+            style="margin: 8px 0 0 0; color: var(--ion-color-medium); font-size: 0.875rem;">
+            <ion-icon name="search"></ion-icon>
+            No patients found matching "{{ searchTerm }}"
+          </p>
+
+          <p *ngIf="filteredPatients.length === maxResults && !selectedPatient"
+            style="margin: 8px 0 0 0; color: var(--ion-color-warning); font-size: 0.875rem;">
+            <ion-icon name="alert-circle"></ion-icon>
+            Showing first {{ maxResults }} results. Type more characters to refine your search.
+          </p>
 
           <!-- Selected Patient Display -->
           <div *ngIf="selectedPatient"
