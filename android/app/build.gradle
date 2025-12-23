@@ -22,12 +22,30 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    
+    signingConfigs {
+        release {
+            storeFile file('../patient-records.keystore')
+            storePassword '4122133'
+            keyAlias 'patient-records'
+            keyPassword '4122133'
+        }
+    }
+    
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    
+    // Custom APK naming - commented out to allow ionic cap run to work
+    // applicationVariants.all { variant ->
+    //     variant.outputs.all {
+    //         outputFileName = "I❤️MyDentist-v${variant.versionName}.apk"
+    //     }
+    // }
 }
 
 repositories {

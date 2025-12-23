@@ -20,8 +20,6 @@ import {
   IonText,
   IonSearchbar,
   IonModal,
-  IonDatetime,
-  IonDatetimeButton,
   IonTextarea,
   IonInput,
   IonSelect,
@@ -59,8 +57,6 @@ import { PaymentService, Payment } from '../services/payment';
     IonText,
     IonSearchbar,
     IonModal,
-    IonDatetime,
-    IonDatetimeButton,
     IonTextarea,
     IonInput,
     IonSelect,
@@ -91,6 +87,8 @@ export class ViewpatientPage implements OnInit {
   editingPayment: Payment | null = null
   newPayment: Payment = {
     visitId: 0,
+    firstName: '',
+    lastName: '',
     amount: 0,
     paymentDate: new Date().toISOString(),
     paymentMethod: 'Cash',
@@ -229,6 +227,8 @@ export class ViewpatientPage implements OnInit {
     this.showPaymentForm = true
     this.newPayment = {
       visitId: visit.id || 0,
+      firstName: visit.firstName,
+      lastName: visit.lastName,
       amount: 0,
       paymentDate: new Date().toISOString(),
       paymentMethod: 'Cash',

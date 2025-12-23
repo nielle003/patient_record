@@ -4,6 +4,8 @@ import { DatabaseService } from './database'
 export interface Visit {
     id?: number
     patientId: number
+    firstName: string
+    lastName: string
     procedureDone: string
     comments: string
     dateOfVisit: string
@@ -33,11 +35,13 @@ export class VisitService {
         console.log('Adding visit:', visit)
         const res: any = await this.db.run(
             `INSERT INTO visits (
-        patientId, procedureDone, comments, dateOfVisit,
+        patientId, firstName, lastName, procedureDone, comments, dateOfVisit,
         modeOfPayment, totalCost, totalPaid, balance
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 visit.patientId,
+                visit.firstName,
+                visit.lastName,
                 visit.procedureDone,
                 visit.comments,
                 visit.dateOfVisit,
@@ -71,10 +75,12 @@ export class VisitService {
         await this.init()
         const res: any = await this.db.run(
             `UPDATE visits SET 
-        procedureDone = ?, comments = ?, dateOfVisit = ?,
+        firstName = ?, lastName = ?, procedureDone = ?, comments = ?, dateOfVisit = ?,
         modeOfPayment = ?, totalCost = ?, totalPaid = ?, balance = ?
       WHERE id = ?`,
             [
+                visit.firstName,
+                visit.lastName,
                 visit.procedureDone,
                 visit.comments,
                 visit.dateOfVisit,
@@ -90,7 +96,15 @@ export class VisitService {
 
     async deleteVisit(id: number): Promise<boolean> {
         await this.init()
-        const res: any = await this.db.run('DELETE FROM visits WHERE id = ?', [id])
-        return (res.changes?.changes ?? 0) > 0
+
+        // Use transaction to delete visit and its payments together
+        return await this.db.runTransaction(async () => {
+            // First delete all payments for this visit
+            await this.db.run('DELETE FROM payments WHERE visitId = ?', [id])
+
+            // Then delete the visit itself
+            const res: any = await this.db.run('DELETE FROM visits WHERE id = ?', [id])
+            return (res.changes?.changes ?? 0) > 0
+        })
     }
 }

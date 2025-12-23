@@ -48,18 +48,25 @@ export class BackupService {
     async exportAllTables(): Promise<void> {
         const tables = ['users', 'patients', 'visits', 'payments']
 
+        // Create a single timestamped folder for all backups
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+        const folderName = `Backups-${timestamp}`
+
         for (const table of tables) {
-            await this.shareBackup(table)
-            // Small delay between shares
+            await this.shareBackup(table, folderName)
+            // Small delay between saves
             await new Promise(resolve => setTimeout(resolve, 500))
         }
     }
 
     // Save backup directly to local storage (Downloads folder on Android)
-    async shareBackup(tableName: string): Promise<void> {
+    async shareBackup(tableName: string, folderName?: string): Promise<void> {
         const csv = await this.exportTableToCSV(tableName)
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
         const fileName = `${tableName}_backup_${timestamp}.csv`
+
+        // Use provided folder name or create a new one
+        const backupFolder = folderName || `Backups-${timestamp}`
 
         if (Capacitor.getPlatform() === 'web') {
             // For web, download directly
@@ -68,15 +75,26 @@ export class BackupService {
         }
 
         try {
-            // Save directly to Downloads folder
+            // Create backup folder (ignore error if already exists)
+            try {
+                await Filesystem.mkdir({
+                    path: `Download/${backupFolder}`,
+                    directory: Directory.ExternalStorage,
+                    recursive: true
+                })
+            } catch (e) {
+                // Directory might already exist, continue anyway
+            }
+
+            // Save file inside the backup folder
             await Filesystem.writeFile({
-                path: `Download/${fileName}`,
+                path: `Download/${backupFolder}/${fileName}`,
                 data: csv,
                 directory: Directory.ExternalStorage,
                 encoding: Encoding.UTF8
             })
 
-            console.log(`Backup saved successfully to Downloads/${fileName}`)
+            console.log(`Backup saved successfully to Downloads/${backupFolder}/${fileName}`)
         } catch (error) {
             console.error('Backup error:', error)
             throw error
@@ -95,7 +113,7 @@ export class BackupService {
     }
 
     // Import CSV to database
-    async importCSV(tableName: string, csvContent: string): Promise<number> {
+    async importCSV(tableName: string, csvContent: string): Promise<{ imported: number, failed: number, errors: string[] }> {
         await this.db.init()
 
         // Parse CSV
@@ -107,13 +125,16 @@ export class BackupService {
         // Get headers
         const headers = this.parseCSVLine(lines[0])
         let importedCount = 0
+        let failedCount = 0
+        const errors: string[] = []
 
         // Process each data row
         for (let i = 1; i < lines.length; i++) {
             const values = this.parseCSVLine(lines[i])
 
             if (values.length !== headers.length) {
-                console.warn(`Skipping row ${i + 1}: column count mismatch`)
+                failedCount++
+                errors.push(`Row ${i + 1}: Column count mismatch (expected ${headers.length}, got ${values.length})`)
                 continue
             }
 
@@ -128,11 +149,14 @@ export class BackupService {
                 )
                 importedCount++
             } catch (error) {
+                failedCount++
+                const errorMsg = (error as Error).message || String(error)
+                errors.push(`Row ${i + 1}: ${errorMsg}`)
                 console.error(`Error importing row ${i + 1}:`, error)
             }
         }
 
-        return importedCount
+        return { imported: importedCount, failed: failedCount, errors }
     }
 
     // Parse CSV line handling quoted values

@@ -74,8 +74,8 @@ export class RegisterPage implements OnInit {
       return
     }
 
-    if (this.password.length < 4) {
-      this.error = 'Password must be at least 4 characters'
+    if (this.password.length < 5) {
+      this.error = 'Password must be at least 5 characters'
       return
     }
 

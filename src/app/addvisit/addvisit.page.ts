@@ -65,6 +65,8 @@ import { PaymentService, Payment } from '../services/payment';
 export class AddvisitPage implements OnInit {
   visit: Visit = {
     patientId: 0,
+    firstName: '',
+    lastName: '',
     procedureDone: '',
     comments: '',
     dateOfVisit: new Date().toISOString(),
@@ -142,6 +144,8 @@ export class AddvisitPage implements OnInit {
   selectPatient(patient: Patient) {
     this.selectedPatient = patient
     this.visit.patientId = patient.id || 0
+    this.visit.firstName = patient.firstName
+    this.visit.lastName = patient.lastName
     this.searchTerm = `${patient.firstName} ${patient.lastName}`
     this.filteredPatients = []
   }
@@ -149,6 +153,8 @@ export class AddvisitPage implements OnInit {
   clearPatientSelection() {
     this.selectedPatient = null
     this.visit.patientId = 0
+    this.visit.firstName = ''
+    this.visit.lastName = ''
     this.searchTerm = ''
     this.filteredPatients = this.patients
   }
@@ -193,6 +199,8 @@ export class AddvisitPage implements OnInit {
         if (this.initialPayment > 0) {
           const payment: Payment = {
             visitId: visitId,
+            firstName: this.visit.firstName,
+            lastName: this.visit.lastName,
             amount: this.initialPayment,
             paymentDate: new Date().toISOString(),
             paymentMethod: this.visit.modeOfPayment === 'Cash' ? 'Cash' : 'Down Payment',
@@ -220,6 +228,8 @@ export class AddvisitPage implements OnInit {
   resetForm() {
     this.visit = {
       patientId: 0,
+      firstName: '',
+      lastName: '',
       procedureDone: '',
       comments: '',
       dateOfVisit: new Date().toISOString(),

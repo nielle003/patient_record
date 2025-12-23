@@ -10,9 +10,6 @@ import {
   IonButton,
   IonButtons,
   IonBackButton,
-  IonList,
-  IonItem,
-  IonLabel,
   IonText,
   IonCard,
   IonCardHeader,
@@ -41,9 +38,6 @@ import { FilePicker } from '@capawesome/capacitor-file-picker';
     IonButton,
     IonButtons,
     IonBackButton,
-    IonList,
-    IonItem,
-    IonLabel,
     IonText,
     IonCard,
     IonCardHeader,
@@ -171,6 +165,21 @@ export class BackupPage implements OnInit {
     this.message = ''
     this.error = ''
 
+    // Show confirmation warning
+    const confirmed = window.confirm(
+      '⚠️ WARNING: Importing will overwrite existing data in the table.\n\n' +
+      'Make sure you are importing in the correct order:\n' +
+      '1. users_\n' +
+      '2. patients_\n' +
+      '3. visits_\n' +
+      '4. payments_\n\n' +
+      'Do you want to continue?'
+    )
+
+    if (!confirmed) {
+      return
+    }
+
     try {
       // Pick CSV file using native file picker
       const result = await FilePicker.pickFiles({
@@ -205,15 +214,32 @@ export class BackupPage implements OnInit {
       if (fileName.includes('users')) tableName = 'users'
       else if (fileName.includes('patients')) tableName = 'patients'
       else if (fileName.includes('visits')) tableName = 'visits'
+      else if (fileName.includes('payments')) tableName = 'payments'
       else {
-        this.error = 'Cannot determine table from filename. Use users_, patients_, or visits_ prefix.'
+        this.error = 'Cannot determine table from filename. Use users_, patients_, visits_, or payments_ prefix.'
         this.isLoading = false
         return
       }
 
       try {
-        const count = await this.backupService.importCSV(tableName, csvContent)
-        this.message = `Successfully imported ${count} records into ${tableName}`
+        const result = await this.backupService.importCSV(tableName, csvContent)
+
+        if (result.imported > 0) {
+          this.message = `Successfully imported ${result.imported} records into ${tableName}`
+        }
+
+        if (result.failed > 0) {
+          const errorSummary = result.errors.slice(0, 5).join('\n')
+          const moreErrors = result.errors.length > 5 ? `\n...and ${result.errors.length - 5} more errors` : ''
+          this.error = `Import completed with ${result.failed} failures:\n${errorSummary}${moreErrors}`
+
+          // If nothing was imported, make error more prominent
+          if (result.imported === 0) {
+            this.message = ''
+            alert(`Import failed!\n\n${result.failed} rows failed to import.\n\nCommon causes:\n- Wrong CSV columns\n- Data type mismatches\n- Missing required fields\n\nFirst error: ${result.errors[0]}`)
+          }
+        }
+
         await this.loadBackupFiles()
       } catch (err) {
         this.error = 'Import failed: ' + (err as Error).message

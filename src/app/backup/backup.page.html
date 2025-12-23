@@ -55,7 +55,13 @@
       </ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <p>Import CSV file to restore data. Filename should start with users_, patients_, or visits_</p>
+      <p>Import CSV file to restore data. Filename should start with users_, patients_, visits_, or payments_ </p>
+
+      <ion-text color="warning">
+        <p style="font-weight: bold; font-size: 1.1em; margin: 12px 0;">
+          ⚠️ IMPORTANT: Follow this order when importing: users_ → patients_ → visits_ → payments_
+        </p>
+      </ion-text>
 
       <ion-button expand="block" color="secondary" (click)="importFile()" [disabled]="isLoading">
         <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
@@ -73,32 +79,10 @@
     <p class="ion-padding">{{ error }}</p>
   </ion-text>
 
-  <!-- Backup Files List -->
-  <ion-card *ngIf="backupFiles.length > 0">
-    <ion-card-header>
-      <ion-card-title>Saved Backups (Local Storage)</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-list>
-        <ion-item *ngFor="let file of backupFiles">
-          <ion-label>
-            <h3>{{ getTableName(file) }}</h3>
-            <p>{{ getFileDate(file) }}</p>
-          </ion-label>
-          <ion-button slot="end" fill="clear" (click)="restoreFromBackup(file)">
-            Restore
-          </ion-button>
-          <ion-button slot="end" fill="clear" color="danger" (click)="deleteBackup(file)">
-            Delete
-          </ion-button>
-        </ion-item>
-      </ion-list>
-    </ion-card-content>
-  </ion-card>
-
-  <ion-text color="medium" *ngIf="backupFiles.length === 0 && !isLoading" class="ion-text-center">
-    <p>No backups found. Create a backup to get started.</p>
+  <ion-text>
+    <p class="ion-padding">The backup will be stored in the Download Folder of the device.</p>
   </ion-text>
+
 
   <!-- Loading Indicator -->
   <ion-text color="medium" *ngIf="isLoading" class="ion-text-center">
