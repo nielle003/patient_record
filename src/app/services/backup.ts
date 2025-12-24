@@ -128,6 +128,11 @@ export class BackupService {
         let failedCount = 0
         const errors: string[] = []
 
+        // Build statements array for transaction
+        const statements: Array<{ statement: string, values: any[] }> = []
+        const placeholders = headers.map(() => '?').join(', ')
+        const columnNames = headers.join(', ')
+
         // Process each data row
         for (let i = 1; i < lines.length; i++) {
             const values = this.parseCSVLine(lines[i])
@@ -138,22 +143,23 @@ export class BackupService {
                 continue
             }
 
-            // Build INSERT query
-            const placeholders = headers.map(() => '?').join(', ')
-            const columnNames = headers.join(', ')
+            // Add statement to transaction set
+            statements.push({
+                statement: `INSERT OR REPLACE INTO ${tableName} (${columnNames}) VALUES (${placeholders})`,
+                values: values.map(v => v === '' ? null : v)
+            })
+        }
 
-            try {
-                await this.db.run(
-                    `INSERT OR REPLACE INTO ${tableName} (${columnNames}) VALUES (${placeholders})`,
-                    values.map(v => v === '' ? null : v)
-                )
-                importedCount++
-            } catch (error) {
-                failedCount++
-                const errorMsg = (error as Error).message || String(error)
-                errors.push(`Row ${i + 1}: ${errorMsg}`)
-                console.error(`Error importing row ${i + 1}:`, error)
-            }
+        // Execute all statements in a single transaction
+        try {
+            await this.db.runTransactionSet(statements)
+            importedCount = statements.length
+            console.log(`Successfully imported ${importedCount} rows to ${tableName}`)
+        } catch (error) {
+            const errorMsg = (error as Error).message || String(error)
+            errors.push(`Transaction failed: ${errorMsg}`)
+            failedCount = statements.length
+            console.error('Import transaction error:', error)
         }
 
         return { imported: importedCount, failed: failedCount, errors }

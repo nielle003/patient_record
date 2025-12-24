@@ -1,4 +1,4 @@
-import { Component } from '@angular/core'
+import { Component, OnInit } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { Router, RouterModule } from '@angular/router'
@@ -17,6 +17,7 @@ import {
   IonCard
 } from '@ionic/angular/standalone'
 import { UserService } from '../services/user'
+
 
 @Component({
   selector: 'app-login',
@@ -41,21 +42,37 @@ import { UserService } from '../services/user'
     IonCard
   ]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   username = ''
   password = ''
   error = ''
 
   constructor(private userService: UserService, private router: Router) { }
 
+  ngOnInit() {
+    const today = new Date()
+
+    if (today.getDate() === 15) {
+      alert('📅 Monthly Backup Reminder\n\nIt\'s the 15th of the month! Don\'t forget to backup your patient records.\n\nGo to Backup page > Export tables.')
+    }
+  }
+
   async login() {
-    const valid = await this.userService.login(this.username, this.password)
-    if (valid) {
-      this.error = ''
-      alert('Login successful!')
-      this.router.navigate(['/home'])
-    } else {
-      this.error = 'Invalid username or password'
+    try {
+
+      const valid = await this.userService.login(this.username, this.password)
+
+      if (valid) {
+        this.error = ''
+        alert('Login successful!')
+        this.router.navigate(['/home'])
+      } else {
+        this.error = 'Invalid username or password'
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error)
+      alert('Login failed: ' + (error as Error).message)
+      this.error = 'Login failed: ' + (error as Error).message
     }
   }
 }

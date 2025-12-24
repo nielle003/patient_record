@@ -12,20 +12,31 @@ export class DatabaseService {
   private db: SQLiteDBConnection | null = null
   private DB_NAME = 'patient_records'
   private initialized = false
+  // Encryption passphrase - in production, consider storing this more securely
+  private readonly ENCRYPTION_SECRET = 'PatientRecords@2025!Secure#Key'
 
   async init() {
     if (this.initialized && this.db) {
+      console.log('✅ Database already initialized')
       return // Already initialized
     }
 
     try {
+      console.log('🔧 Initializing database...')
+
       // Check if connection already exists
+      console.log('🔍 Checking for existing connection...')
       const isConnection = await this.sqlite.isConnection(this.DB_NAME, false)
+      console.log('Connection exists:', isConnection.result)
+
       if (isConnection.result) {
         // Retrieve existing connection
+        console.log('📂 Retrieving existing connection...')
         this.db = await this.sqlite.retrieveConnection(this.DB_NAME, false)
+        console.log('✅ Retrieved existing connection')
       } else {
-        // Create new connection
+        // Create new connection WITHOUT encryption (temporary test)
+        console.log('🔐 Creating new connection...')
         this.db = await this.sqlite.createConnection(
           this.DB_NAME,
           false,
@@ -33,9 +44,13 @@ export class DatabaseService {
           1,
           false
         )
+        console.log('✅ Connection created')
       }
 
+      // Open database
+      console.log('🔓 Opening database...')
       await this.db.open()
+      console.log('✅ Database opened successfully')
 
       // Enable WAL mode for better corruption protection
       await this.enableWALMode()
@@ -224,7 +239,7 @@ export class DatabaseService {
 
     try {
       console.log('🔄 Executing transaction with', statements.length, 'statements')
-      
+
       const set = statements.map(stmt => ({
         statement: stmt.statement,
         values: stmt.values || []
@@ -232,7 +247,7 @@ export class DatabaseService {
 
       const result = await this.db.executeSet(set, true) // true = use transaction
       console.log('✅ Transaction completed successfully')
-      
+
       return result
     } catch (error) {
       console.error('❌ Transaction failed:', error)
