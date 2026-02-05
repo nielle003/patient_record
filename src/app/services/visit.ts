@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core'
 import { DatabaseService } from './database'
 import { Payment } from './payment'
+import { PhotoService } from './photo'
 
 export interface Visit {
     id?: number
@@ -14,13 +15,17 @@ export interface Visit {
     totalCost: number
     totalPaid: number
     balance: number
+    attachments?: string[] // Array of file paths to x-ray images
 }
 
 @Injectable({ providedIn: 'root' })
 export class VisitService {
     private initialized = false
 
-    constructor(private db: DatabaseService) {
+    constructor(
+        private db: DatabaseService,
+        private photoService: PhotoService
+    ) {
         this.init()
     }
 
@@ -34,11 +39,12 @@ export class VisitService {
     async addVisit(visit: Visit): Promise<number> {
         await this.init()
         console.log('Adding visit:', visit)
+        const attachmentsJson = visit.attachments ? JSON.stringify(visit.attachments) : null
         const res: any = await this.db.run(
             `INSERT INTO visits (
         patientId, firstName, lastName, procedureDone, comments, dateOfVisit,
-        modeOfPayment, totalCost, totalPaid, balance
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        modeOfPayment, totalCost, totalPaid, balance, attachments
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 visit.patientId,
                 visit.firstName,
@@ -49,7 +55,8 @@ export class VisitService {
                 visit.modeOfPayment,
                 visit.totalCost,
                 visit.totalPaid,
-                visit.balance
+                visit.balance,
+                attachmentsJson
             ]
         )
         return res.changes?.lastId ?? -1
@@ -63,13 +70,23 @@ export class VisitService {
             [patientId]
         )
         console.log('Visits result:', res)
-        return res.values ?? []
+        const visits: any[] = res.values ?? []
+        // Parse attachments JSON string back to array
+        return visits.map(visit => ({
+            ...visit,
+            attachments: visit.attachments ? JSON.parse(visit.attachments as string) : []
+        }))
     }
 
     async getAllVisits(): Promise<Visit[]> {
         await this.init()
         const res: any = await this.db.query('SELECT * FROM visits ORDER BY dateOfVisit DESC', [])
-        return res.values ?? []
+        const visits: any[] = res.values ?? []
+        // Parse attachments JSON string back to array
+        return visits.map(visit => ({
+            ...visit,
+            attachments: visit.attachments ? JSON.parse(visit.attachments as string) : []
+        }))
     }
 
     async updateVisit(visit: Visit): Promise<boolean> {
@@ -77,7 +94,7 @@ export class VisitService {
         const res: any = await this.db.run(
             `UPDATE visits SET 
         firstName = ?, lastName = ?, procedureDone = ?, comments = ?, dateOfVisit = ?,
-        modeOfPayment = ?, totalCost = ?, totalPaid = ?, balance = ?
+        modeOfPayment = ?, totalCost = ?, totalPaid = ?, balance = ?, attachments = ?
       WHERE id = ?`,
             [
                 visit.firstName,
@@ -89,6 +106,7 @@ export class VisitService {
                 visit.totalCost,
                 visit.totalPaid,
                 visit.balance,
+                visit.attachments ? JSON.stringify(visit.attachments) : null,
                 visit.id
             ]
         )
@@ -98,12 +116,26 @@ export class VisitService {
     async deleteVisit(id: number): Promise<boolean> {
         await this.init()
 
+        // First, get the visit to extract patientId for photo cleanup
+        const visitResult: any = await this.db.query(
+            'SELECT patientId FROM visits WHERE id = ?',
+            [id]
+        )
+
+        if (visitResult.values && visitResult.values.length > 0) {
+            const patientId = visitResult.values[0].patientId
+
+            // Delete all photos for this visit
+            console.log(`🗑️ Deleting photos for visit ${id} of patient ${patientId}`)
+            await this.photoService.deleteVisitPhotos(patientId, id)
+        }
+
         // Use executeSet transaction to delete visit and its payments together atomically
         const result = await this.db.runTransactionSet([
             { statement: 'DELETE FROM payments WHERE visitId = ?', values: [id] },
             { statement: 'DELETE FROM visits WHERE id = ?', values: [id] }
         ])
-        
+
         return (result?.changes?.changes ?? 0) > 0
     }
 
@@ -112,13 +144,15 @@ export class VisitService {
         await this.init()
         console.log('Adding visit with payment:', visit, initialPayment)
 
+        const attachmentsJson = visit.attachments ? JSON.stringify(visit.attachments) : null
+
         // Prepare statements for transaction
         const statements: Array<{ statement: string, values: any[] }> = [
             {
                 statement: `INSERT INTO visits (
                     patientId, firstName, lastName, procedureDone, comments, dateOfVisit,
-                    modeOfPayment, totalCost, totalPaid, balance
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    modeOfPayment, totalCost, totalPaid, balance, attachments
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 values: [
                     visit.patientId,
                     visit.firstName,
@@ -129,7 +163,8 @@ export class VisitService {
                     visit.modeOfPayment,
                     visit.totalCost,
                     visit.totalPaid,
-                    visit.balance
+                    visit.balance,
+                    attachmentsJson
                 ]
             }
         ]

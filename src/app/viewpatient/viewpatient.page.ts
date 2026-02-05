@@ -27,9 +27,12 @@ import {
   AlertController,
   IonIcon
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { camera, images, imagesOutline, close, arrowBack, transgender, calendar, shieldCheckmark, chevronDown, chevronBack, chevronForward, peopleOutline, create, trash, wallet, addCircle, add, remove, contract, calendarOutline } from 'ionicons/icons';
 import { PatientService, Patient } from '../services/patient';
 import { VisitService, Visit } from '../services/visit';
 import { PaymentService, Payment } from '../services/payment';
+import { PhotoService } from '../services/photo';
 
 @Component({
   selector: 'app-viewpatient',
@@ -85,6 +88,16 @@ export class ViewpatientPage implements OnInit {
   showEditPaymentForm = false
   editingVisit: Visit | null = null
   editingPayment: Payment | null = null
+
+  // Image viewer properties
+  showImageViewer = false
+  currentImageUrl = ''
+  zoomLevel = 1
+  panX = 0
+  panY = 0
+  private lastTouchDistance = 0
+  private lastTouchX = 0
+  private lastTouchY = 0
   newPayment: Payment = {
     visitId: 0,
     firstName: '',
@@ -123,9 +136,34 @@ export class ViewpatientPage implements OnInit {
     private patientService: PatientService,
     private visitService: VisitService,
     private paymentService: PaymentService,
+    private photoService: PhotoService,
     private router: Router,
     private alertController: AlertController
-  ) { }
+  ) {
+    // Register all icons used in this page
+    addIcons({
+      camera,
+      images,
+      'images-outline': imagesOutline,
+      close,
+      'arrow-back': arrowBack,
+      transgender,
+      calendar,
+      'calendar-outline': calendarOutline,
+      'shield-checkmark': shieldCheckmark,
+      'chevron-down': chevronDown,
+      'chevron-back': chevronBack,
+      'chevron-forward': chevronForward,
+      'people-outline': peopleOutline,
+      create,
+      trash,
+      wallet,
+      'add-circle': addCircle,
+      add,
+      remove,
+      contract
+    });
+  }
 
   async ngOnInit() {
     await this.loadPatients()
@@ -180,7 +218,7 @@ export class ViewpatientPage implements OnInit {
 
       this.totalPages = Math.ceil(this.totalCount / this.itemsPerPage)
       await this.loadCurrentPage()
-      
+
       console.log(`Search "${query}" found ${this.totalCount} results`)
     } catch (error) {
       console.error('Search error:', error)
@@ -542,5 +580,225 @@ export class ViewpatientPage implements OnInit {
       age--
     }
     return age
+  }
+
+  loadPhoto(filepath: string): string {
+    return this.photoService.loadPhoto(filepath)
+  }
+
+  async viewFullImage(filepath: string) {
+    this.currentImageUrl = this.photoService.loadPhoto(filepath)
+    this.showImageViewer = true
+    this.resetZoom()
+    console.log('🖼️ Viewing image:', this.currentImageUrl)
+  }
+
+  closeImageViewer() {
+    this.showImageViewer = false
+    this.resetZoom()
+  }
+
+  zoomIn() {
+    this.zoomLevel = Math.min(this.zoomLevel + 0.5, 5)
+  }
+
+  zoomOut() {
+    this.zoomLevel = Math.max(this.zoomLevel - 0.5, 1)
+    if (this.zoomLevel === 1) {
+      this.panX = 0
+      this.panY = 0
+    }
+  }
+
+  resetZoom() {
+    this.zoomLevel = 1
+    this.panX = 0
+    this.panY = 0
+  }
+
+  toggleZoom() {
+    if (this.zoomLevel === 1) {
+      this.zoomLevel = 2
+    } else {
+      this.resetZoom()
+    }
+  }
+
+  handleTouchStart(event: TouchEvent) {
+    if (event.touches.length === 2) {
+      // Pinch to zoom
+      const touch1 = event.touches[0]
+      const touch2 = event.touches[1]
+      this.lastTouchDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      )
+    } else if (event.touches.length === 1) {
+      // Pan
+      this.lastTouchX = event.touches[0].clientX
+      this.lastTouchY = event.touches[0].clientY
+    }
+  }
+
+  handleTouchMove(event: TouchEvent) {
+    event.preventDefault()
+
+    if (event.touches.length === 2) {
+      // Pinch to zoom
+      const touch1 = event.touches[0]
+      const touch2 = event.touches[1]
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      )
+
+      if (this.lastTouchDistance > 0) {
+        const scale = currentDistance / this.lastTouchDistance
+        this.zoomLevel = Math.max(1, Math.min(5, this.zoomLevel * scale))
+      }
+
+      this.lastTouchDistance = currentDistance
+    } else if (event.touches.length === 1 && this.zoomLevel > 1) {
+      // Pan when zoomed
+      const deltaX = event.touches[0].clientX - this.lastTouchX
+      const deltaY = event.touches[0].clientY - this.lastTouchY
+
+      this.panX += deltaX / this.zoomLevel
+      this.panY += deltaY / this.zoomLevel
+
+      this.lastTouchX = event.touches[0].clientX
+      this.lastTouchY = event.touches[0].clientY
+    }
+  }
+
+  handleTouchEnd(event: TouchEvent) {
+    if (event.touches.length < 2) {
+      this.lastTouchDistance = 0
+    }
+    if (this.zoomLevel === 1) {
+      this.panX = 0
+      this.panY = 0
+    }
+  }
+
+  async takePhotoForVisit(visit: Visit) {
+    try {
+      // Check photo limit (max 5 photos per visit)
+      const currentPhotoCount = visit.attachments?.length || 0
+      if (currentPhotoCount >= 5) {
+        window.alert('Maximum 5 photos allowed per visit. Please delete existing photos to add new ones.')
+        return
+      }
+
+      console.log('📸 Taking photo for visit:', visit.id)
+      console.log('📸 Patient ID:', this.selectedPatient?.id)
+      console.log('📸 Visit ID:', visit.id)
+      const photo = await this.photoService.takePhoto(this.selectedPatient?.id, visit.id)
+      if (photo) {
+        console.log('✅ Photo captured:', photo)
+        console.log('💾 Photo saved to:', photo.filepath)
+
+        // Update visit attachments - create new array reference
+        if (!visit.attachments) {
+          visit.attachments = []
+        }
+        visit.attachments = [...visit.attachments, photo.filepath]
+
+        // Update visit in database
+        await this.visitService.updateVisit(visit)
+        console.log('✅ Visit updated with new photo')
+
+        // Reload visits to refresh UI
+        if (this.selectedPatient?.id) {
+          this.visits = await this.visitService.getVisitsByPatient(this.selectedPatient.id)
+        }
+      }
+    } catch (err) {
+      console.error('Error taking photo:', err)
+      window.alert('Error taking photo: ' + (err as Error).message)
+    }
+  }
+
+  async selectPhotoForVisit(visit: Visit) {
+    try {
+      // Check photo limit (max 5 photos per visit)
+      const currentPhotoCount = visit.attachments?.length || 0
+      if (currentPhotoCount >= 5) {
+        window.alert('Maximum 5 photos allowed per visit. Please delete existing photos to add new ones.')
+        return
+      }
+
+      console.log('🖼️ Selecting photo for visit:', visit.id)
+      console.log('🖼️ Patient ID:', this.selectedPatient?.id)
+      console.log('🖼️ Visit ID:', visit.id)
+      const photo = await this.photoService.selectPhoto(this.selectedPatient?.id, visit.id)
+      if (photo) {
+        console.log('✅ Photo selected:', photo)
+        console.log('💾 Photo saved to:', photo.filepath)
+
+        // Update visit attachments - create new array reference
+        if (!visit.attachments) {
+          visit.attachments = []
+        }
+        visit.attachments = [...visit.attachments, photo.filepath]
+
+        // Update visit in database
+        await this.visitService.updateVisit(visit)
+        console.log('✅ Visit updated with new photo')
+
+        // Reload visits to refresh UI
+        if (this.selectedPatient?.id) {
+          this.visits = await this.visitService.getVisitsByPatient(this.selectedPatient.id)
+        }
+      }
+    } catch (err) {
+      console.error('Error selecting photo:', err)
+      window.alert('Error selecting photo: ' + (err as Error).message)
+    }
+  }
+
+  async deletePhotoFromVisit(visit: Visit, filepath: string) {
+    const confirmAlert = await this.alertController.create({
+      header: 'Delete Photo',
+      message: 'Are you sure you want to delete this image?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          handler: async () => {
+            try {
+              console.log('🗑️ Deleting photo:', filepath)
+
+              // Delete photo file from storage
+              await this.photoService.deletePhoto(filepath)
+              console.log('✅ Photo file deleted')
+
+              // Remove from visit attachments
+              if (visit.attachments) {
+                visit.attachments = visit.attachments.filter(path => path !== filepath)
+              }
+
+              // Update visit in database
+              await this.visitService.updateVisit(visit)
+              console.log('✅ Visit updated after photo deletion')
+
+              // Reload visits to refresh UI
+              if (this.selectedPatient?.id) {
+                this.visits = await this.visitService.getVisitsByPatient(this.selectedPatient.id)
+              }
+            } catch (err) {
+              console.error('Error deleting photo:', err)
+              window.alert('Error deleting photo: ' + (err as Error).message)
+            }
+          }
+        }
+      ]
+    })
+
+    await confirmAlert.present()
   }
 }

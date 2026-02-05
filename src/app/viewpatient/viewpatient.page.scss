@@ -1,0 +1,15 @@
+// Custom styles for enlarged image modal
+::ng-deep .custom-alert-large {
+    --max-width: 90vw;
+    --width: 90vw;
+
+    .alert-wrapper {
+        max-width: 90vw;
+        width: 90vw;
+    }
+
+    .alert-message {
+        max-height: 75vh;
+        overflow: auto;
+    }
+}

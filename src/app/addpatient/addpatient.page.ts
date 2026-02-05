@@ -23,6 +23,8 @@ import {
   IonCardHeader
 } from '@ionic/angular/standalone';
 import { PatientService, Patient } from '../services/patient';
+import { addIcons } from 'ionicons';
+import { checkmarkCircle, addCircle, refresh, person, male, female, maleFemale, briefcase, car, airplane, card, idCard, fitness, document } from 'ionicons/icons';
 
 @Component({
   selector: 'app-addpatient',
@@ -77,7 +79,9 @@ export class AddpatientPage implements OnInit {
     private patientService: PatientService,
     private router: Router,
     private route: ActivatedRoute
-  ) { }
+  ) {
+    addIcons({ checkmarkCircle, addCircle, refresh, person, male, female, maleFemale, briefcase, car, airplane, card, idCard, fitness, document });
+  }
 
   async ngOnInit() {
     // Check if we're in edit mode

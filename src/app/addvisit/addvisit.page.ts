@@ -29,6 +29,8 @@ import {
 import { VisitService, Visit } from '../services/visit';
 import { PatientService, Patient } from '../services/patient';
 import { PaymentService, Payment } from '../services/payment';
+import { addIcons } from 'ionicons';
+import { personCircle, medical, cash, checkmarkCircle, refresh } from 'ionicons/icons';
 
 @Component({
   selector: 'app-addvisit',
@@ -73,7 +75,8 @@ export class AddvisitPage implements OnInit, OnDestroy {
     modeOfPayment: '',
     totalCost: 0,
     totalPaid: 0,
-    balance: 0
+    balance: 0,
+    attachments: []
   }
 
   initialPayment: number = 0
@@ -116,7 +119,9 @@ export class AddvisitPage implements OnInit, OnDestroy {
     private patientService: PatientService,
     private paymentService: PaymentService,
     private router: Router
-  ) { }
+  ) {
+    addIcons({ personCircle, medical, cash, checkmarkCircle, refresh });
+  }
 
   async ngOnInit() {
     // No need to load all patients on init
@@ -210,8 +215,6 @@ export class AddvisitPage implements OnInit, OnDestroy {
       // Calculate final totals
       this.calculateBalance()
 
-      console.log('Attempting to add visit:', this.visit)
-      
       // Prepare initial payment if provided
       let initialPaymentData: Payment | undefined
       if (this.initialPayment > 0) {
@@ -228,15 +231,14 @@ export class AddvisitPage implements OnInit, OnDestroy {
 
       // Add visit with payment in a single transaction
       const visitId = await this.visitService.addVisitWithPayment(this.visit, initialPaymentData)
-      console.log('Visit added with ID:', visitId)
 
       if (visitId && visitId > 0) {
         this.success = 'Visit added successfully!'
         alert(this.success)
-        this.resetForm()
+        await this.resetForm()
+        this.router.navigate(['/home'])
       } else {
         this.error = 'Failed to add visit - no ID returned'
-        console.error(this.error)
         alert(this.error)
       }
     } catch (err) {
@@ -246,7 +248,7 @@ export class AddvisitPage implements OnInit, OnDestroy {
     }
   }
 
-  resetForm() {
+  async resetForm() {
     this.visit = {
       patientId: 0,
       firstName: '',
@@ -257,7 +259,8 @@ export class AddvisitPage implements OnInit, OnDestroy {
       modeOfPayment: '',
       totalCost: 0,
       totalPaid: 0,
-      balance: 0
+      balance: 0,
+      attachments: []
     }
     this.initialPayment = 0
     this.selectedPatient = null

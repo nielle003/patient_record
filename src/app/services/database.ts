@@ -24,27 +24,39 @@ export class DatabaseService {
     try {
       console.log('🔧 Initializing database...')
 
-      // Check if connection already exists
-      console.log('🔍 Checking for existing connection...')
-      const isConnection = await this.sqlite.isConnection(this.DB_NAME, false)
-      console.log('Connection exists:', isConnection.result)
-
-      if (isConnection.result) {
-        // Retrieve existing connection
-        console.log('📂 Retrieving existing connection...')
+      // Try to retrieve first, if that fails, create new
+      try {
+        console.log('📂 Attempting to retrieve existing connection...')
         this.db = await this.sqlite.retrieveConnection(this.DB_NAME, false)
         console.log('✅ Retrieved existing connection')
-      } else {
-        // Create new connection WITHOUT encryption (temporary test)
-        console.log('🔐 Creating new connection...')
-        this.db = await this.sqlite.createConnection(
-          this.DB_NAME,
-          false,
-          'no-encryption',
-          1,
-          false
-        )
-        console.log('✅ Connection created')
+      } catch (retrieveError: any) {
+        console.log('📂 No existing connection found, creating new...')
+        try {
+          this.db = await this.sqlite.createConnection(
+            this.DB_NAME,
+            false,
+            'no-encryption',
+            1,
+            false
+          )
+          console.log('✅ Connection created')
+        } catch (createError: any) {
+          // If creation fails, try closing and recreating
+          console.log('⚠️ Create failed, attempting cleanup and retry...')
+          try {
+            await this.sqlite.closeConnection(this.DB_NAME, false)
+          } catch (e) {
+            // Ignore close errors
+          }
+          this.db = await this.sqlite.createConnection(
+            this.DB_NAME,
+            false,
+            'no-encryption',
+            1,
+            false
+          )
+          console.log('✅ Connection created after cleanup')
+        }
       }
 
       // Open database
@@ -66,6 +78,8 @@ export class DatabaseService {
       this.initialized = true
     } catch (error) {
       console.error('Database initialization error:', error)
+      this.initialized = false
+      this.db = null
       throw error
     }
   }
@@ -111,6 +125,7 @@ export class DatabaseService {
         totalCost REAL,
         totalPaid REAL DEFAULT 0,
         balance REAL,
+        attachments TEXT,
         FOREIGN KEY (patientId) REFERENCES patients(id)
       );
 
@@ -157,12 +172,12 @@ export class DatabaseService {
     }
 
     try {
-      // Enable WAL mode
-      await this.db.execute('PRAGMA journal_mode=WAL;')
-
-      // Set synchronous mode to NORMAL for better performance
-      // NORMAL is safe with WAL mode and faster than FULL
-      await this.db.execute('PRAGMA synchronous=NORMAL;')
+      // Enable WAL mode using executeSet which runs statements without transaction wrapper
+      // PRAGMA commands cannot be executed within a transaction
+      await this.db.executeSet([
+        { statement: 'PRAGMA journal_mode=WAL;', values: [] },
+        { statement: 'PRAGMA synchronous=NORMAL;', values: [] }
+      ])
 
       console.log('✅ WAL mode enabled successfully')
     } catch (error) {

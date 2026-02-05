@@ -19,6 +19,8 @@ import {
   IonCardContent
 } from '@ionic/angular/standalone';
 import { UserService } from '../services/user';
+import { addIcons } from 'ionicons';
+import { checkmarkCircle } from 'ionicons/icons';
 
 @Component({
   selector: 'app-register',
@@ -55,7 +57,9 @@ export class RegisterPage implements OnInit {
   constructor(
     private userService: UserService,
     private router: Router
-  ) { }
+  ) {
+    addIcons({ checkmarkCircle });
+  }
 
   ngOnInit() {
   }

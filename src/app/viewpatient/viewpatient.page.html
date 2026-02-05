@@ -192,6 +192,44 @@
             <strong>Payment Mode</strong>
             <span>{{ visit.modeOfPayment }}</span>
           </div>
+
+          <!-- X-Ray Images -->
+          <div style="margin: 16px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <strong style="color: var(--ion-color-medium);">
+                <ion-icon name="images-outline" style="vertical-align: middle;"></ion-icon>
+                Images ({{ visit.attachments?.length || 0 }})
+              </strong>
+              <div style="display: flex; gap: 8px;">
+                <ion-button size="small" fill="outline" color="primary" (click)="takePhotoForVisit(visit)"
+                  title="Take Photo" style="--border-width: 2px;">
+                  <ion-icon slot="icon-only" name="camera" style="font-size: 20px;"></ion-icon>
+                </ion-button>
+                <ion-button size="small" fill="outline" color="success" (click)="selectPhotoForVisit(visit)"
+                  title="Select from Gallery" style="--border-width: 2px;">
+                  <ion-icon slot="icon-only" name="images" style="font-size: 20px;"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+            <div *ngIf="visit.attachments && visit.attachments.length > 0"
+              style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 6px; max-width: 400px;">
+              <div *ngFor="let attachment of visit.attachments"
+                style="position: relative; border-radius: 6px; overflow: hidden; aspect-ratio: 1; border: 1.5px solid var(--ion-color-light); cursor: pointer;"
+                (click)="viewFullImage(attachment)">
+                <img [src]="loadPhoto(attachment)" style="width: 100%; height: 100%; object-fit: cover;" />
+                <ion-button size="small" fill="solid" color="danger"
+                  (click)="deletePhotoFromVisit(visit, attachment); $event.stopPropagation()"
+                  style="position: absolute; top: 2px; right: 2px; --padding-start: 4px; --padding-end: 4px; --padding-top: 3px; --padding-bottom: 3px; height: 22px; min-width: 22px;">
+                  <ion-icon slot="icon-only" name="trash" style="font-size: 12px;"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+            <div *ngIf="!visit.attachments || visit.attachments.length === 0"
+              style="text-align: center; padding: 20px; color: var(--ion-color-medium); font-size: 0.85rem; background: var(--ion-color-light); border-radius: 8px;">
+              No images yet. Tap camera or gallery icon to add.
+            </div>
+          </div>
+
           <div style="background: var(--ion-color-light); padding: 16px; border-radius: 8px; margin: 16px 0;">
             <div class="info-row" style="border: none;">
               <strong>Total Cost</strong>
@@ -474,6 +512,45 @@
 
           <ion-button expand="block" (click)="updatePayment()" class="ion-margin-top" color="primary">
             Update Payment
+          </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Image Viewer Modal -->
+  <ion-modal [isOpen]="showImageViewer" (didDismiss)="closeImageViewer()" [initialBreakpoint]="1"
+    [breakpoints]="[0, 1]">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Image</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeImageViewer()">
+              <ion-icon slot="icon-only" name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding" style="--background: #000;">
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 100%; touch-action: none;"
+          #imageContainer>
+          <img [src]="currentImageUrl"
+            style="max-width: 100%; max-height: 100vh; object-fit: contain; cursor: zoom-in; transition: transform 0.3s ease; transform-origin: center center;"
+            [style.transform]="'scale(' + zoomLevel + ') translate(' + panX + 'px, ' + panY + 'px)'"
+            (touchstart)="handleTouchStart($event)" (touchmove)="handleTouchMove($event)"
+            (touchend)="handleTouchEnd($event)" (click)="toggleZoom()" />
+        </div>
+        <div
+          style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 20px;">
+          <ion-button size="small" fill="solid" (click)="zoomIn()">
+            <ion-icon slot="icon-only" name="add"></ion-icon>
+          </ion-button>
+          <ion-button size="small" fill="solid" (click)="resetZoom()">
+            <ion-icon slot="icon-only" name="contract"></ion-icon>
+          </ion-button>
+          <ion-button size="small" fill="solid" (click)="zoomOut()">
+            <ion-icon slot="icon-only" name="remove"></ion-icon>
           </ion-button>
         </div>
       </ion-content>

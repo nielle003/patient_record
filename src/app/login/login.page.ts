@@ -17,7 +17,8 @@ import {
   IonCard
 } from '@ionic/angular/standalone'
 import { UserService } from '../services/user'
-
+import { addIcons } from 'ionicons'
+import { medical, logIn, personAdd } from 'ionicons/icons'
 
 @Component({
   selector: 'app-login',
@@ -47,7 +48,9 @@ export class LoginComponent implements OnInit {
   password = ''
   error = ''
 
-  constructor(private userService: UserService, private router: Router) { }
+  constructor(private userService: UserService, private router: Router) {
+    addIcons({ medical, 'log-in': logIn, 'person-add': personAdd });
+  }
 
   ngOnInit() {
     const today = new Date()
