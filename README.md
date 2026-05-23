@@ -10,7 +10,7 @@
 
 A professional, full-featured mobile application for dental practice management with offline-first architecture and comprehensive patient record tracking.
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation) • [Architecture](#-architecture) • [Screenshots](#-screenshots)
+[Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation) • [Architecture](#-architecture) 
 
 </div>
 
@@ -232,26 +232,6 @@ The app automatically reminds users on the 15th of each month to perform databas
 2. Select tables to export
 3. Use the **Share** functionality to save/send backup files
 4. Import previously exported files to restore data
-
----
-
-## 🎨 Screenshots
-
-<div align="center">
-
-### Patient List & Search
-Paginated patient directory with real-time search
-
-### Patient Details
-Comprehensive patient profile with visit history
-
-### Visit Management
-Detailed visit records with photo attachments
-
-### Payment Tracking
-Financial overview with payment history
-
-</div>
 
 ---
 
